@@ -2,1206 +2,815 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="description" content="AI-анализ рынка и сигналы в реальном времени с поддержкой менеджера. Получите доступ к торговым сигналам через Telegram."/>
-<meta property="og:title" content="NeuralTrade — AI-аналитика для трейдеров"/>
-<meta property="og:description" content="AI-анализ рынка и сигналы в реальном времени с поддержкой менеджера. Получите доступ к торговым сигналам через Telegram."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="https://example.com/og-image.png"/>
-<link rel="icon" href="favicon.ico"/>
-<title>NeuralTrade — AI-аналитика для трейдеров</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>SIGNAL PRO — AI Анализатор</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0B1220;
-  --bg2:#111827;
-  --bg3:#162033;
-  --card:#1B2540;
-  --border:#243041;
-  --soft-border:rgba(148, 163, 184, 0.12);
-  --green:#22C55E;
-  --green2:#22C55E;
-  --green-dim:rgba(34, 197, 94, 0.12);
-  --red:#EF4444;
-  --red-dim:rgba(239, 68, 68, 0.12);
-  --blue:#22D3EE;
-  --blue2:#3B82F6;
-  --blue-dim:rgba(34, 211, 238, 0.18);
-  --text:#E5E7EB;
-  --muted:#9CA3AF;
-  --muted2:#6B7280;
+  --bg:#0D1421;--bg2:#111B2E;--bg3:#162035;--card:#1A2640;--card2:#1F2E47;
+  --border:#243350;--soft:#2A3D5C;
+  --green:#00E676;--green2:#00C853;--green-dim:rgba(0,230,118,0.1);--green-glow:rgba(0,230,118,0.25);
+  --red:#FF3D5A;--red-dim:rgba(255,61,90,0.1);
+  --blue:#00CFFF;--blue-dim:rgba(0,207,255,0.1);
+  --amber:#FFD700;--amber-dim:rgba(255,215,0,0.12);
+  --text:#E8EDF5;--muted:#7A8FAD;--muted2:#4A5E7A;
   --mono:'JetBrains Mono',monospace;
+  --font:'Exo 2',sans-serif;
 }
 html{scroll-behavior:smooth}
-body{
-  font-family:'Outfit',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  line-height:1.6;
-  overflow-x:hidden;
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden; -webkit-tap-highlight-color: transparent;}
+
+/* GRID BG */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,118,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(0,207,255,0.05) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:100;background:rgba(13,20,33,0.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--green),#00BFA5);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#0D1421}
+.logo-text{font-weight:800;font-size:16px;letter-spacing:-.5px}
+.logo-text span{color:var(--green)}
+.header-right{display:flex;align-items:center;gap:15px}
+.online-badge{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--muted)}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.5s infinite}
+.online-count{font-weight:700;color:var(--green);font-family:var(--mono);font-size:13px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* LAYOUT */
+.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 20px 60px}
+
+/* MOTIVATIONAL BANNER */
+.motivational-banner {
+    background: linear-gradient(90deg, rgba(0, 230, 118, 0.1), rgba(0, 207, 255, 0.1));
+    border: 1px solid rgba(0, 230, 118, 0.25);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    text-align: center;
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.5;
+    box-shadow: 0 4px 20px rgba(0, 230, 118, 0.05);
+}
+.motivational-banner b {
+    color: var(--green);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* NAV */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;height:64px;
-  background:rgba(7,8,13,0.85);
-  backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--soft-border);
-}
-.nav-logo{
-  font-weight:800;font-size:18px;letter-spacing:-0.5px;
-  background:linear-gradient(135deg,var(--green),var(--blue));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.nav-links{display:flex;gap:32px;list-style:none}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
-.nav-links a:hover{color:var(--text)}
-.nav-cta{
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  color:#0B1220;
-  border:none;padding:9px 20px;border-radius:8px;
-  font-weight:700;font-size:13px;cursor:pointer;
-  font-family:'Outfit',sans-serif;
-  transition:all .2s;
-  box-shadow:0 4px 12px rgba(34, 211, 238, 0.3);
-}
-.nav-cta:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 16px rgba(34, 211, 238, 0.4)}
+/* HERO STRIP */
+.hero-strip{background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(0,207,255,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:16px;padding:24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.hero-left h1{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px; line-height: 1.3;}
+.hero-left h1 em{font-style:normal;color:var(--green)}
+.hero-left p{font-size:13px;color:var(--muted);font-weight:400; line-height: 1.5;}
 
-/* HERO */
-.hero{
-  min-height:100vh;
-  display:flex;flex-direction:column;justify-content:center;
-  padding:120px 40px 80px;
-  position:relative;overflow:hidden;
+/* YOUTUBE BUTTON */
+.yt-btn {
+    background: linear-gradient(135deg, #FF0000, #CC0000);
+    color: #FFFFFF; font-weight: 800; border: none; border-radius: 8px; padding: 10px 16px;
+    font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none; font-family: var(--font); transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2); margin-top: 14px; letter-spacing: 0.5px; text-transform: uppercase;
 }
-.hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1200px;margin:0 auto;width:100%}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;
-  background:var(--green-dim);border:1px solid rgba(0,230,118,0.2);
-  color:var(--green);font-size:12px;font-weight:600;
-  padding:6px 14px;border-radius:20px;margin-bottom:24px;
-  letter-spacing:.5px;text-transform:uppercase;
-}
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulseAnim 1.8s infinite}
-@keyframes pulseAnim{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-.hero h1{
-  font-size:52px;font-weight:800;line-height:1.1;letter-spacing:-1.5px;
-  margin-bottom:20px;
-}
-.hero h1 em{font-style:normal;color:var(--green)}
-.hero p.lead{
-  font-size:17px;color:var(--muted);line-height:1.7;
-  margin-bottom:36px;font-weight:300;max-width:480px;
-}
-.hero-btns{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
-.btn-primary{
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  color:#0B1220;
-  border:none;padding:14px 28px;border-radius:10px;
-  font-weight:700;font-size:15px;cursor:pointer;
-  font-family:'Outfit',sans-serif;transition:all .2s;
-  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-  box-shadow:0 4px 12px rgba(34, 211, 238, 0.3);
-}
-.btn-primary:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 6px 16px rgba(34, 211, 238, 0.4)}
-.btn-secondary{  
-  background:transparent;color:var(--text);
-  border:1px solid var(--soft-border);padding:14px 28px;border-radius:10px;
-  font-weight:500;font-size:15px;cursor:pointer;
-  font-family:'Outfit',sans-serif;transition:all .2s;
-  text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-}
-.btn-secondary:hover{border-color:var(--blue);background:rgba(34, 211, 238, 0.08)}
-.trust-row{display:flex;gap:20px;flex-wrap:wrap}
-.trust-item{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);font-weight:400}
-.trust-item svg{flex-shrink:0}
+.yt-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 0, 0, 0.3); }
 
-/* HERO MOCKUP */
-.hero-visual{position:relative}
-.mockup-card{
-  background:var(--card);
-  border:1px solid var(--soft-border);
-  border-radius:20px;padding:24px;
-  position:relative;overflow:hidden;
-}
-.mockup-card::before{
-  content:'';position:absolute;top:-60px;right:-60px;
-  width:200px;height:200px;
-  background:radial-gradient(circle,rgba(0,230,118,0.15),transparent 70%);
-  pointer-events:none;
-}
-.mc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.mc-title{font-size:13px;font-weight:600;color:var(--muted)}
-.mc-live{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green);font-weight:600;font-family:var(--mono)}
-.chart-area{height:120px;position:relative;margin-bottom:20px}
-.chart-svg{width:100%;height:100%}
-.signals-list{display:flex;flex-direction:column;gap:8px}
-.sig-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 14px;border-radius:10px;
-  background:rgba(255,255,255,0.03);border:1px solid var(--soft-border);
-}
-.sig-pair{font-size:13px;font-weight:600;font-family:var(--mono)}
-.sig-tf{font-size:11px;color:var(--muted2);margin-top:2px}
-.sig-dir{
-  padding:4px 10px;border-radius:6px;
-  font-size:11px;font-weight:700;font-family:var(--mono);
-  letter-spacing:.5px;
-}
-.sig-dir.buy{background:var(--green-dim);color:var(--green)}
-.sig-dir.sell{background:var(--red-dim);color:var(--red)}
-.sig-pct{font-size:13px;font-weight:600;font-family:var(--mono)}
-.sig-pct.pos{color:var(--green)}
-.sig-pct.neg{color:var(--red)}
-.mc-footer{
-  display:flex;gap:16px;margin-top:16px;
-  padding-top:16px;border-top:1px solid var(--soft-border);
-}
-.mc-stat{flex:1;text-align:center}
-.mc-stat-v{font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono)}
-.mc-stat-l{font-size:11px;color:var(--muted2);margin-top:2px}
+.hero-stats{display:flex;gap:24px}
+.hstat{text-align:center}
+.hstat-n{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--green)}
+.hstat-l{font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
 
-/* BG GRID */
-.bg-grid{
-  position:fixed;top:0;left:0;right:0;bottom:0;z-index:-1;
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
-  background-size:60px 60px;
+/* VIP BANNER */
+.vip-premium-card {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
-.bg-glow1{
-  position:fixed;top:-200px;left:-200px;
-  width:600px;height:600px;
-  background:radial-gradient(circle,var(--blue-dim),transparent 70%);
-  pointer-events:none;z-index:-1;
+.vip-premium-card::before {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: shine 4s infinite;
 }
-.bg-glow2{
-  position:fixed;bottom:-200px;right:-100px;
-  width:500px;height:500px;
-  background:radial-gradient(circle,rgba(0,188,212,0.06),transparent 70%);
-  pointer-events:none;z-index:-1;
+@keyframes shine { 100% { left: 200%; } }
+.vip-prem-title {
+    font-size: 18px; font-weight: 900; color: var(--amber); margin-bottom: 10px; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 8px; text-transform: uppercase;
 }
+.vip-prem-text {
+    font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 18px; font-weight: 400;
+}
+.vip-prem-btn {
+    background: linear-gradient(135deg, #FFD700, #FDB931);
+    color: #0D1421; font-weight: 900; border: none; border-radius: 10px; padding: 14px 24px;
+    font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    text-decoration: none; font-family: var(--font); transition: transform 0.2s;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2); letter-spacing: 0.5px;
+}
+.vip-prem-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3); }
 
-/* SECTIONS */
-section{padding:100px 40px;max-width:1200px;margin:0 auto}
-.section-label{
-  font-size:11px;font-weight:700;letter-spacing:2px;
-  text-transform:uppercase;color:var(--green);margin-bottom:12px;
-}
-.section-title{
-  font-size:38px;font-weight:800;letter-spacing:-1px;
-  margin-bottom:12px;line-height:1.15;
-}
-.section-sub{
-  font-size:16px;color:var(--muted);font-weight:300;
-  max-width:520px;line-height:1.7;margin-bottom:52px;
-}
+/* TABS */
+.main-tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px;width:fit-content; overflow-x: auto; max-width: 100%;}
+.main-tab{padding:10px 20px;border-radius:9px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .2s; white-space: nowrap;}
+.main-tab.active{background:var(--green);color:#0D1421}
 
-/* FEATURES GRID */
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.feature-card{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:16px;padding:28px;
-  transition:border-color .3s,transform .3s;
-}
-.feature-card:hover{border-color:var(--blue);transform:translateY(-4px)}
-.feature-icon{
-  width:44px;height:44px;border-radius:12px;
-  background:var(--green-dim);border:1px solid rgba(0,230,118,0.2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:20px;margin-bottom:16px;
-}
-.social-proof-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.social-proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.review-card{background:rgba(255,255,255,0.03);border:1px solid var(--soft-border);border-radius:18px;padding:26px;display:flex;flex-direction:column;gap:16px;min-height:260px}
-.review-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.review-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));display:flex;align-items:center;justify-content:center;color:#0B1220;font-weight:800;font-size:14px}
-.review-name{font-size:15px;font-weight:700}
-.review-meta{font-size:12px;color:var(--muted);line-height:1.5}
-.review-quote{font-size:14px;color:var(--text);line-height:1.75;font-weight:300}
-.review-badge{align-self:flex-start;padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;color:var(--blue);background:rgba(34, 211, 238, 0.12);}
-.fit-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.fit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.fit-card{background:var(--card);border:1px solid var(--soft-border);border-radius:18px;padding:28px}
-.fit-card h3{font-size:18px;font-weight:700;margin-bottom:14px}
-.fit-card p{font-size:14px;color:var(--muted);line-height:1.75}
-.fit-card ul{margin-top:14px;display:grid;gap:10px;list-style:none;padding:0}
-.fit-card li{position:relative;padding-left:20px;color:var(--text);font-size:14px;line-height:1.75}
-.fit-card li::before{content:'•';position:absolute;left:0;top:2px;color:var(--blue)}
-.about-section{padding:80px 40px;max-width:1200px;margin:0 auto}
-.about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.about-card{background:var(--card);border:1px solid var(--soft-border);border-radius:18px;padding:28px;min-height:220px;display:flex;flex-direction:column;gap:16px}
-.about-card h3{font-size:18px;font-weight:700;margin-bottom:10px}
-.about-card p{font-size:14px;color:var(--muted);line-height:1.7;font-weight:300}
-@media(max-width:900px){.social-proof-grid{grid-template-columns:1fr};.fit-grid{grid-template-columns:1fr};.about-grid{grid-template-columns:1fr}}
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 
-/* STEPS */
-.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;position:relative}
-.step-card{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:16px;padding:32px 28px;position:relative;
-}
-.step-card:not(:last-child)::after{
-  content:'→';
-  position:absolute;right:-20px;top:50%;transform:translateY(-50%);
-  font-size:20px;color:var(--muted2);z-index:1;
-}
-.step-num{
-  font-size:48px;font-weight:800;color:var(--green);
-  font-family:var(--mono);line-height:1;margin-bottom:16px;
-  opacity:.3;
-}
-.step-title{font-size:17px;font-weight:700;margin-bottom:10px}
-.step-desc{font-size:13px;color:var(--muted);line-height:1.6;font-weight:300}
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.card-body{padding:20px}
 
-/* SIGNALS SHOWCASE */
-.showcase-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.sig-card{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:16px;padding:24px;
-  transition:border-color .3s;
-}
-.sig-card:hover{border-color:var(--blue)}
-.sig-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.sig-asset{font-size:16px;font-weight:700;font-family:var(--mono)}
-.sig-time{font-size:11px;color:var(--muted2);margin-top:3px}
-.sig-badge{
-  padding:5px 12px;border-radius:6px;
-  font-size:12px;font-weight:700;font-family:var(--mono);
-}
-.sig-badge.buy{background:var(--green-dim);color:var(--green);border:1px solid rgba(34, 197, 94, 0.2)}
-.sig-badge.sell{background:var(--red-dim);color:var(--red);border:1px solid rgba(239, 68, 68, 0.2)}
-.sig-mini-chart{height:60px;margin-bottom:16px}
-.sig-stats{display:flex;gap:24px}
-.sig-stat-item{font-size:12px;color:var(--muted)}
-.sig-stat-item strong{display:block;font-size:15px;color:var(--text);font-family:var(--mono);margin-top:2px}
+/* CATEGORY FILTER */
+.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cat-btn{padding:6px 13px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;letter-spacing:.3px}
+.cat-btn:hover{border-color:var(--green);color:var(--green)}
+.cat-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+
+/* ASSETS LIST */
+.assets-list{display:flex;flex-direction:column;gap:4px;max-height:420px;overflow-y:auto;padding-right:4px}
+.assets-list::-webkit-scrollbar{width:4px}
+.assets-list::-webkit-scrollbar-track{background:transparent}
+.assets-list::-webkit-scrollbar-thumb{background:var(--soft);border-radius:2px}
+
+.asset-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:all .15s;position:relative}
+.asset-row:hover{background:rgba(255,255,255,0.03);border-color:var(--border)}
+.asset-row.selected{background:var(--green-dim);border-color:rgba(0,230,118,0.3)}
+.asset-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;border:1.5px solid var(--border)}
+.asset-name{flex:1}
+.asset-name-main{font-size:13px;font-weight:600}
+.asset-name-sub{font-size:10px;color:var(--muted2);margin-top:1px}
+.asset-payouts{display:flex;gap:5px}
+.payout-badge{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:700;font-family:var(--mono);background:var(--green-dim);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
+.payout-badge.disabled{background:transparent;color:var(--muted2);border-color:transparent;font-size:13px}
+.asset-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .15s}
+.asset-row.selected .asset-check{background:var(--green);border-color:var(--green);color:#0D1421}
+
+/* TIME SELECTOR */
+.time-select{display:flex;gap:6px;margin-bottom:20px}
+.time-btn{flex:1;padding:10px 8px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mono);transition:all .15s;text-align:center}
+.time-btn:hover{border-color:var(--green);color:var(--green)}
+.time-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+
+/* ANALYZE BTN */
+.analyze-btn{width:100%;padding:15px;background:linear-gradient(135deg,var(--green),var(--green2));border:none;border-radius:10px;font-size:15px;font-weight:800;color:#0D1421;cursor:pointer;font-family:var(--font);transition:all .2s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px}
+.analyze-btn:hover{transform:translateY(-1px);filter:brightness(1.1);box-shadow:0 8px 30px var(--green-glow)}
+.analyze-btn:active{transform:translateY(0)}
+.analyze-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
+.analyze-btn svg{animation:spin 1.2s linear infinite;display:none}
+.analyze-btn.loading svg{display:block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* LOADER */
+.loader-bar{height:2px;background:var(--border);border-radius:1px;margin-top:12px;overflow:hidden;display:none}
+.loader-bar.show{display:block}
+.loader-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%;transition:width .1s;border-radius:1px}
+.loader-text{text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:1.5px;margin-top:8px;display:none}
+.loader-text.show{display:block}
+
+/* RESULT PANEL */
+.result-panel{margin-top:20px}
+.result-empty{text-align:center;padding:48px 20px;color:var(--muted2)}
+.result-empty-icon{font-size:40px;margin-bottom:12px;opacity:.3}
+.result-empty p{font-size:13px;font-weight:300;line-height:1.6}
+
+/* SIGNAL CARD */
+.signal-card{border-radius:14px;padding:24px;border:1px solid; animation: fadeIn .4s ease;}
+.signal-card.up{background:linear-gradient(135deg,rgba(0,230,118,0.07),rgba(0,230,118,0.03));border-color:rgba(0,230,118,0.25)}
+.signal-card.dn{background:linear-gradient(135deg,rgba(255,61,90,0.07),rgba(255,61,90,0.03));border-color:rgba(255,61,90,0.25)}
+
+.signal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.signal-dir-wrap{display:flex;align-items:center;gap:12px}
+.signal-arrow{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.signal-arrow.up{background:rgba(0,230,118,0.15)}
+.signal-arrow.dn{background:rgba(255,61,90,0.15)}
+.signal-dir{font-size:24px;font-weight:900;font-family:var(--mono)}
+.signal-dir.up{color:var(--green)}
+.signal-dir.dn{color:var(--red)}
+.signal-asset{font-size:12px;color:var(--muted);margin-top:2px}
+
+.signal-pct-wrap{text-align:right}
+.signal-pct{font-size:34px;font-weight:900;font-family:var(--mono)}
+.signal-pct.up{color:var(--green)}
+.signal-pct.dn{color:var(--red)}
+.signal-pct-label{font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase}
+
+/* PROGRESS BAR */
+.pct-bar{height:6px;background:var(--border);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.pct-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.pct-fill.up{background:linear-gradient(90deg,var(--green2),var(--green))}
+.pct-fill.dn{background:linear-gradient(90deg,#C62828,var(--red))}
+
+.signal-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.meta-box{background:rgba(0,0,0,0.25);border-radius:9px;padding:10px 12px}
+.meta-label{font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.meta-val{font-size:13px;font-weight:700;font-family:var(--mono)}
+
+.divider{height:1px;background:var(--border);margin:14px 0}
+
+.why-label{font-size:10px;color:var(--muted2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.why-text{font-size:13px;color:var(--text);line-height:1.7;font-weight:300}
+
+.ind-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.ind-tag{padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono)}
+.ind-tag.up{background:rgba(0,230,118,0.12);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
+.ind-tag.dn{background:rgba(255,61,90,0.12);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
 
 /* CALCULATOR */
-.calc-wrapper{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:24px;padding:48px;
-  position:relative;overflow:hidden;
-}
-.calc-wrapper::before{
-  content:'';position:absolute;top:-100px;right:-100px;
-  width:300px;height:300px;
-  background:radial-gradient(circle,var(--blue-dim),transparent 70%);
-  pointer-events:none;
-}
-.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
-.calc-inputs{display:flex;flex-direction:column;gap:28px}
-.calc-field label{
-  display:block;font-size:13px;font-weight:600;
-  color:var(--muted);margin-bottom:10px;letter-spacing:.3px;
-}
-.calc-field input[type=range]{
-  width:100%;-webkit-appearance:none;appearance:none;
-  height:4px;border-radius:2px;
-  background:rgba(255,255,255,0.1);outline:none;cursor:pointer;
-}
-.calc-field input[type=range]::-webkit-slider-thumb{
-  -webkit-appearance:none;width:20px;height:20px;
-  border-radius:50%;background:var(--green);cursor:pointer;
-  box-shadow:0 0 10px rgba(0,230,118,0.4);
-}
-.calc-field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.calc-field-val{
-  font-size:18px;font-weight:700;color:var(--green);font-family:var(--mono);
-}
-.calc-results{display:flex;flex-direction:column;gap:16px}
-.result-card{
-  background:rgba(255,255,255,0.03);border:1px solid var(--soft-border);
-  border-radius:14px;padding:20px 24px;
-  display:flex;justify-content:space-between;align-items:center;
-}
-.result-card.highlight{
-  background:var(--green-dim);border-color:rgba(34, 197, 94, 0.25);
-}
-.result-label{font-size:13px;color:var(--muted);font-weight:400}
-.result-val{font-size:24px;font-weight:700;font-family:var(--mono)}
-.result-card.highlight .result-val{color:var(--green)}
-.calc-note{
-  font-size:12px;color:var(--muted2);line-height:1.6;
-  margin-top:20px;padding-top:20px;border-top:1px solid var(--soft-border);
-}
+.calc-section{display:none}
+.calc-section.active{display:block}
 
-/* FAQ */
-.faq-list{display:flex;flex-direction:column;gap:8px;max-width:800px}
-.faq-item{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:14px;overflow:hidden;
-}
-.faq-q{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:20px 24px;cursor:pointer;
-  font-weight:600;font-size:15px;
-  transition:color .2s;
-  user-select:none;
-}
-.faq-q:hover{color:var(--green)}
-.faq-icon{
-  font-size:20px;color:var(--muted);transition:transform .3s;flex-shrink:0;margin-left:16px;
-}
-.faq-item.open .faq-icon{transform:rotate(45deg);color:var(--green)}
-.faq-a{
-  max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s;
-  padding:0 24px;font-size:14px;color:var(--muted);line-height:1.7;font-weight:300;
-}
-.faq-item.open .faq-a{max-height:300px;padding:0 24px 20px}
+.calc-fields{display:flex;flex-direction:column;gap:20px}
+.field-group label{display:block;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600}
+.field-row{display:flex;align-items:center;gap:12px}
+.field-val{font-size:18px;font-weight:800;color:var(--green);font-family:var(--mono);min-width:80px;text-align:right}
+input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);cursor:pointer;box-shadow:0 0 8px rgba(0,230,118,0.4)}
+.field-limits{display:flex;justify-content:space-between;font-size:10px;color:var(--muted2);margin-top:5px}
 
-/* FINAL CTA */
-.final-cta{
-  text-align:center;padding:120px 40px;
-  background:linear-gradient(180deg,transparent,var(--blue-dim),transparent);
-  border-top:1px solid var(--soft-border);border-bottom:1px solid var(--soft-border);
-}
-.final-cta h2{font-size:42px;font-weight:800;letter-spacing:-1px;margin-bottom:16px}
-.final-cta p{font-size:17px;color:var(--muted);max-width:480px;margin:0 auto 40px;font-weight:300}
-.final-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.calc-results{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.calc-res-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.calc-res-card.main{background:var(--green-dim);border-color:rgba(0,230,118,0.3);grid-column:span 2}
+.calc-res-label{font-size:11px;color:var(--muted2);letter-spacing:.5px;margin-bottom:5px}
+.calc-res-val{font-size:22px;font-weight:800;font-family:var(--mono)}
+.calc-res-card.main .calc-res-val{color:var(--green);font-size:28px}
 
-.desktop-widget{
-  position:fixed;right:24px;bottom:24px;
-  background:rgba(17,24,39,0.95);border:1px solid var(--soft-border);
-  border-radius:20px;padding:14px 18px;box-shadow:0 20px 60px rgba(0,0,0,0.18);
-  display:flex;align-items:center;gap:12px;z-index:120;
-}
-.desktop-widget a{color:var(--text);text-decoration:none;display:flex;align-items:center;gap:10px;font-weight:600;font-size:13px;}
-.desktop-widget:hover{transform:translateY(-1px);border-color:var(--blue);}
-.desktop-widget .widget-text{display:flex;flex-direction:column;align-items:flex-start;}
-.desktop-widget .widget-title{font-size:14px;font-weight:700;color:var(--text);}
-.desktop-widget .widget-sub{font-size:12px;color:var(--muted);}
-@media(max-width:900px){.desktop-widget{display:none}} 
+/* SIGNALS TAB */
+.signals-section{display:none}
+.signals-section.active{display:block}
 
-/* FOOTER */
-footer{
-  padding:48px 40px;
-  border-top:1px solid var(--soft-border);
-  text-align:center;
-}
-.footer-logo{
-  font-weight:800;font-size:16px;
-  background:linear-gradient(135deg,var(--green),var(--blue));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  margin-bottom:16px;
-}
-.footer-links{display:flex;gap:24px;justify-content:center;margin-bottom:24px}
-.footer-links a{font-size:13px;color:var(--muted2);text-decoration:none}
-.footer-links a:hover{color:var(--muted)}
-.disclaimer{
-  font-size:11px;color:var(--muted2);line-height:1.7;
-  max-width:700px;margin:0 auto;
-}
+.mini-signals{display:flex;flex-direction:column;gap:8px}
+.mini-sig{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card2);border-radius:10px;border:1px solid var(--border);animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mini-sig-pair{font-size:13px;font-weight:700;font-family:var(--mono);flex:1}
+.mini-sig-time{font-size:11px;color:var(--muted2)}
+.mini-sig-dir{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:800;font-family:var(--mono)}
+.mini-sig-dir.buy{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,230,118,0.2)}
+.mini-sig-dir.sell{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,61,90,0.2)}
+.mini-sig-pct{font-size:13px;font-weight:700;font-family:var(--mono);min-width:40px;text-align:right}
+.mini-sig-pct.up{color:var(--green)}.mini-sig-pct.dn{color:var(--red)}
+.mini-sig-ago{font-size:10px;color:var(--muted2);min-width:45px;text-align:right}
 
-/* STICKY MOBILE CTA */
-.mobile-cta{
-  display:none;
-  position:fixed;bottom:0;left:0;right:0;
-  padding:16px 20px;
-  background:rgba(7,8,13,0.96);
-  backdrop-filter:blur(12px);
-  border-top:1px solid var(--soft-border);
-  z-index:99;
+/* MOBILE */
+@media(max-width:768px){
+  .grid2{grid-template-columns:1fr}
+  .hero-strip{flex-direction:column;align-items:flex-start}
+  .hero-stats{gap:16px}
+  .calc-results{grid-template-columns:1fr}
+  .calc-res-card.main{grid-column:span 1}
 }
-.mobile-cta .btn-primary{width:100%;justify-content:center}
-
-/* WHY FREE */
-.why-free-card{
-  background:var(--card);border:1px solid var(--soft-border);
-  border-radius:20px;padding:48px;
-  display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;
-}
-.why-free-icon{font-size:64px;margin-bottom:16px}
-.why-points{display:flex;flex-direction:column;gap:16px}
-.why-point{display:flex;gap:14px;align-items:flex-start}
-.why-dot{
-  width:8px;height:8px;border-radius:50%;background:var(--green);
-  flex-shrink:0;margin-top:6px;
-}
-.why-point p{font-size:14px;color:var(--muted);line-height:1.6;font-weight:300}
-
-/* COUNTER ANIMATION */
-.count-num{display:inline-block}
-
-/* STATS ROW */
-.stats-row{
-  display:flex;gap:0;
-  border:1px solid var(--soft-border);border-radius:16px;
-  overflow:hidden;margin-bottom:80px;
-  max-width:1200px;margin-left:auto;margin-right:auto;
-}
-.stat-block{
-  flex:1;padding:28px 32px;
-  border-right:1px solid var(--soft-border);
-  text-align:center;
-}
-.stat-block:last-child{border-right:none}
-.stat-block-n{font-size:32px;font-weight:800;font-family:var(--mono);color:var(--green)}
-.stat-block-l{font-size:12px;color:var(--muted2);margin-top:6px;font-weight:400}
-
-/* RESPONSIVE */
-@media(max-width:900px){
-  nav{padding:0 20px}
-  .nav-links{display:none}
-  .hero{padding:100px 20px 60px}
-  .hero-grid{grid-template-columns:1fr;gap:40px}
-  .hero h1{font-size:36px}
-  .features-grid{grid-template-columns:1fr 1fr}
-  .steps-grid{grid-template-columns:1fr;gap:16px}
-  .step-card:not(:last-child)::after{content:'↓';right:50%;transform:translateX(50%);top:auto;bottom:-28px}
-  .showcase-grid{grid-template-columns:1fr}
-  .calc-grid{grid-template-columns:1fr}
-  .why-free-card{grid-template-columns:1fr;padding:32px}
-  section{padding:60px 20px}
-  .section-title{font-size:28px}
-  .stats-row{flex-direction:column}
-  .stat-block{border-right:none;border-bottom:1px solid var(--border)}
-  .stat-block:last-child{border-bottom:none}
-  .final-cta{padding:80px 20px}
-  .mobile-cta{display:block}
-  body{padding-bottom:80px}
-  .calc-wrapper{padding:28px 20px}
-}
-@media(max-width:600px){
-  .features-grid{grid-template-columns:1fr}
-  .hero h1{font-size:30px}
-  .final-cta h2{font-size:28px}
-}
+.safe-area{padding-bottom:env(safe-area-inset-bottom,24px)}
 </style>
 </head>
 <body>
 
-<div class="bg-grid"></div>
-<div class="bg-glow1"></div>
-<div class="bg-glow2"></div>
+<header>
+  <div class="logo">
+    <div class="logo-icon">S</div>
+    <div class="logo-text">Signal<span>Pro</span></div>
+  </div>
+  <div class="header-right">
+    <div class="online-badge">
+      <span class="online-dot"></span>
+      <span style="color:var(--muted);font-size:11px">Онлайн:</span>
+      <span class="online-count" id="onlineCount">—</span>
+    </div>
+  </div>
+</header>
 
-<!-- NAV -->
-<nav>
-  <div class="nav-logo">NeuralTrade</div>
-  <ul class="nav-links">
-    <li><a href="#features" data-i18n="nav.features">Возможности</a></li>
-    <li><a href="#how" data-i18n="nav.how">Как работает</a></li>
-    <li><a href="#signals" data-i18n="nav.signals">Сигналы</a></li>
-    <li><a href="#calculator" data-i18n="nav.calculator">Калькулятор</a></li>
-    <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
-  </ul>
-  <a href="https://t.me/leomarku?text=Здравствуйте,%20хочу%20получить%20доступ%20к%20AI-сигналам" class="nav-cta" target="_blank" rel="noopener noreferrer">Доступ к сигналам бесплатно</a>
-</nav>
+<div class="wrap safe-area">
+  
+  <div class="motivational-banner">
+    🚀 <b>Твоя жизнь мечты уже здесь!</b> С нами ты выйдешь на новый финансовый уровень — осталось только начать!
+  </div>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-grid">
+  <div class="hero-strip">
     <div class="hero-left">
-      <div class="hero-badge"><span class="pulse"></span> AI-анализ работает в реальном времени</div>
-      <h1>AI-анализ рынка и сигналы в реальном времени<br><em>Платформа для системного трейдинга с сопровождением</em></h1>
-      <p class="lead">Наша передовая система анализа непрерывно анализирует рынок, выявляет точки входа и формирует сигнал. Вам остается только открыть сделку на платформе!</p>
-      <div class="hero-btns">
-        <a href="https://t.me/leomarku?text=Здравствуйте,%20хочу%20получить%20доступ%20к%20AI-сигналам" class="btn-primary" target="_blank" rel="noopener noreferrer">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-          Доступ к сигналам бесплатно
-        </a>
-        <a href="#how" class="btn-secondary">Как это работает →</a>
-      </div>
-      <div class="trust-row">
-        <div class="trust-item">
-          <svg width="14" height="14" fill="var(--green)" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414L9 14.414l-3.707-3.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"/></svg>
-          Доступ через менеджера
-        </div>
-        <div class="trust-item">
-          <svg width="14" height="14" fill="var(--green)" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414L9 14.414l-3.707-3.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"/></svg>
-          Подключение бесплатно
-        </div>
-        <div class="trust-item">
-          <svg width="14" height="14" fill="var(--green)" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414L9 14.414l-3.707-3.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0px"/></svg>
-          Подходит для новичков
-        </div>
-        <div class="trust-item">
-          <svg width="14" height="14" fill="var(--green)" viewBox="0 0 20 20"><path d="M16.707 5.293a1 1 0 010 1.414L9 14.414l-3.707-3.707a1 1 0 011.414-1.414L9 11.586l6.293-6.293a1 1 0 011.414 0z"/></svg>
-          Мультиактивный охват
-        </div>
-      </div>
-    </div>
+      <h1>Самая мощная нейросеть<br><em>последнего поколения</em></h1>
+      <p>Продвинутый AI-анализ активов для <b>Binarium</b> и <b>Pocket Option</b> в реальном времени</p>
+      
+      <a href="https://youtu.be/y1FnaHRbsrs" target="_blank" class="yt-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+        Как торговать по ИИ (Инструкция)
+      </a>
 
-    <div class="hero-visual">
-      <div class="mockup-card">
-        <div class="mc-header">
-          <div class="mc-title">NeuralTrade · Сигналы</div>
-          <div class="mc-live"><span class="pulse"></span> LIVE</div>
-        </div>
-        <div class="chart-area">
-          <svg class="chart-svg" viewBox="0 0 400 120" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="chartGrad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.3"/>
-                <stop offset="100%" stop-color="#22D3EE" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <path d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,60 L240,40 L280,35 L320,20 L360,25 L400,15 L400,120 L0,120 Z" fill="url(#chartGrad)"/>
-            <path d="M0,90 L40,85 L80,70 L120,75 L160,55 L200,60 L240,40 L280,35 L320,20 L360,25 L400,15" fill="none" stroke="#22D3EE" stroke-width="2"/>
-            <circle cx="240" cy="40" r="5" fill="#22D3EE"/>
-            <text x="248" y="36" font-size="10" fill="#22D3EE" font-family="JetBrains Mono">ВВЕРХ</text>
-            <circle cx="320" cy="20" r="5" fill="#EF4444"/>
-            <text x="328" y="16" font-size="10" fill="#EF4444" font-family="JetBrains Mono">ВНИЗ</text>
-          </svg>
-        </div>
-        <div class="signals-list">
-          <div class="sig-row">
-            <div>
-              <div class="sig-pair">EUR/USD</div>
-              <div class="sig-tf">M5 · RSI + MA cross</div>
-            </div>
-            <div class="sig-dir buy">▲ ВВЕРХ</div>
-            <div class="sig-pct pos">+82%</div>
-          </div>
-          <div class="sig-row">
-            <div>
-              <div class="sig-pair">GBP/JPY</div>
-              <div class="sig-tf">M1 · Bollinger squeeze</div>
-            </div>
-            <div class="sig-dir sell">▼ ВНИЗ</div>
-            <div class="sig-pct neg">−</div>
-          </div>
-          <div class="sig-row">
-            <div>
-              <div class="sig-pair">BTC/USD</div>
-              <div class="sig-tf">M5 · Volume spike</div>
-            </div>
-            <div class="sig-dir buy">▲ ВВЕРХ</div>
-            <div class="sig-pct pos">+79%</div>
-          </div>
-        </div>
-        <div class="mc-footer">
-          <div class="mc-stat"><div class="mc-stat-v">24/7</div><div class="mc-stat-l">Мониторинг</div></div>
-          <div class="mc-stat"><div class="mc-stat-v">12+</div><div class="mc-stat-l">Активов</div></div>
-          <div class="mc-stat"><div class="mc-stat-v">M1–H1</div><div class="mc-stat-l">Время сделки</div></div>
-        </div>
-      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-n" id="hs1">98%</div><div class="hstat-l">Винрейт ИИ</div></div>
+      <div class="hstat"><div class="hstat-n">1–5M</div><div class="hstat-l">Экспирация</div></div>
+      <div class="hstat"><div class="hstat-n">24/7</div><div class="hstat-l">Работа AI</div></div>
     </div>
   </div>
-</div>
 
-<section class="social-proof-section">
-  <div class="section-label">Отзывы</div>
-  <h2 class="section-title">Как клиенты оценили работу с сигналами</h2>
-  <p class="section-sub">Немного больше о том, как выглядит поддержка, как быстро выходит первый сигнал и почему начинается с простого сопровождения.</p>
-  <div class="social-proof-grid">
-    <div class="review-card">
-      <div class="review-header">
-        <div>
-          <div class="review-name">Иван К., RU</div>
-          <div class="review-meta">Опыт: 1 год / Торгует по сигналам</div>
-        </div>
-        <div class="review-avatar">IK</div>
-      </div>
-      <div class="review-badge">Удобно читать</div>
-      <div class="review-quote">Сигналы приходят в понятном формате, менеджер показал, как не захлебнуться в графиках. Начал с нуля и сразу понял процесс.</div>
+  <div class="vip-premium-card">
+    <div class="vip-prem-title">👑 ВЫСШАЯ ЛИГА: ПРИВАТНЫЙ ИНСТРУМЕНТ ОТ $5,000</div>
+    <div class="vip-prem-text">
+      Для трейдеров с капиталом от $5,000 открыт эксклюзивный инвестиционный пул. <br>
+      Работа напрямую с европейскими аналитиками, использование скрытых инсайдерских алгоритмов и гарантированный выход на стабильный доход <b>от $10,000 ежемесячно</b>.
     </div>
-    <div class="review-card">
-      <div class="review-header">
-        <div>
-          <div class="review-name">Мария С., UA</div>
-          <div class="review-meta">Опыт: новичок / хотел системный подход</div>
-        </div>
-        <div class="review-avatar">MS</div>
-      </div>
-      <div class="review-badge">Менеджер помог</div>
-      <div class="review-quote">Мне понравилось, что не нужно самому сидеть у графика. Вся логика объясняется, и первые сигналы приходят с комментарием.</div>
-    </div>
-    <div class="review-card">
-      <div class="review-header">
-        <div>
-          <div class="review-name">Алексей Н., KZ</div>
-          <div class="review-meta">Опыт: опытный трейдер / проверка сервиса</div>
-        </div>
-        <div class="review-avatar">AN</div>
-      </div>
-      <div class="review-badge">Проще стартовать</div>
-      <div class="review-quote">Система дала понятный формат сигналов, менеджер быстро ответил и помог с подключением. Работает без лишних обещаний.</div>
-    </div>
-  </div>
-</section>
-
-<section class="fit-section">
-  <div class="section-label">Кому подходит</div>
-  <h2 class="section-title">Кому это действительно подходит</h2>
-  <div class="fit-grid">
-    <div class="fit-card">
-      <h3>Подходит</h3>
-      <ul>
-        <li>Готов следовать системе и инструкции</li>
-        <li>Хочет сопровождение менеджера на старте</li>
-        <li>Готов выделять время на анализ и проверку сигналов</li>
-        <li>Ищет понятный формат сигналов, а не «быстрые деньги»</li>
-      </ul>
-    </div>
-    <div class="fit-card">
-      <h3>Не подходит</h3>
-      <ul>
-        <li>Ищет моментальные гарантированные прибыли</li>
-        <li>Не готов соблюдать риск-менеджмент</li>
-        <li>Не хочет общаться с менеджером</li>
-        <li>Не готов учиться или разбираться в логике сигналов</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="about-section">
-  <div class="section-label">О нас</div>
-  <h2 class="section-title">Команда разработчиков, которая торгует и строит AI</h2>
-  <p class="section-sub">Мы — команда разработчиков, которые сделали трейдинг своим основным заработком. Решили двигаться дальше и создать ИИ, который помогает новичкам анализировать рынок и действовать увереннее.</p>
-  <div class="about-grid">
-    <div class="about-card">
-      <h3>Наш путь</h3>
-      <p>Сначала мы торговали сами, проверяли стратегии и выстраивали рабочую систему. Это стало нашим основным доходом, и мы поняли, что можем помочь другим.</p>
-    </div>
-    <div class="about-card">
-      <h3>Почему мы создали ИИ</h3>
-      <p>Торговля — это не только графики, но и дисциплина. Мы сделали AI, чтобы новичкам было проще фильтровать шум и видеть реальные рыночные сигналы.</p>
-    </div>
-    <div class="about-card">
-      <h3>Что мы предлагаем</h3>
-      <p>Мы не обещаем «волшебных» прибылей. Мы даем понятные сигналы, анализ ситуации и поддержку, чтобы вы могли торговать системно.</p>
-    </div>
-  </div>
-</section>
-
-<!-- STATS ROW -->
-<div class="stats-row" style="margin:0 40px 0;max-width:none">
-  <div class="stat-block">
-    <div class="stat-block-n"><span class="count-num" data-target="8400">0</span>+</div>
-    <div class="stat-block-l">Трейдеров подключено</div>
-  </div>
-  <div class="stat-block">
-    <div class="stat-block-n"><span class="count-num" data-target="12">0</span>+</div>
-    <div class="stat-block-l">Торговых инструментов</div>
-  </div>
-  <div class="stat-block">
-    <div class="stat-block-n"><span class="count-num" data-target="3">0</span> мин</div>
-    <div class="stat-block-l">Среднее время входа в сделку</div>
-  </div>
-  <div class="stat-block">
-    <div class="stat-block-n"><span class="count-num" data-target="24">0</span>/7</div>
-    <div class="stat-block-l">Работа алгоритма</div>
-  </div>
-</div>
-
-<!-- FEATURES -->
-<section id="features" style="padding-top:80px">
-  <div class="section-label">Возможности</div>
-  <h2 class="section-title">Что вы получаете<br>после подключения</h2>
-  <p class="section-sub">Всё необходимое для старта — от первого сигнала до понимания логики рынка.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">⚡</div>
-      <div class="feature-title">Сигналы в реальном времени</div>
-      <div class="feature-desc">Алгоритм анализирует движение цены и формирует сигналы без задержки. Вы видите актив, направление и время сделки.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🎯</div>
-      <div class="feature-title">Понятный старт</div>
-      <div class="feature-desc">Вам не нужен многолетний опыт. Интерфейс читается за минуты — сигналы оформлены ясно и без технического перегруза.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🤝</div>
-      <div class="feature-title">Сопровождение менеджера</div>
-      <div class="feature-desc">Персональный менеджер помогает разобраться с платформой, ответит на вопросы и поддержит на старте.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🧠</div>
-      <div class="feature-title">AI-анализ рынка</div>
-      <div class="feature-desc">Нейросеть отслеживает паттерны на нескольких временах сделки одновременно — то, что человек физически не успевает охватить.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <div class="feature-title">Статистика и примеры входов</div>
-      <div class="feature-desc">История сигналов с пояснением логики. Вы видите, почему алгоритм принял то или иное решение.</div>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📚</div>
-      <div class="feature-title">Объяснение логики</div>
-      <div class="feature-desc">Не просто сигнал, а обучение. Разбираете паттерны вместе с менеджером, постепенно формируя собственное понимание.</div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section-label">Как начать</div>
-  <h2 class="section-title">Три шага до первого сигнала</h2>
-  <p class="section-sub">Простой процесс без технических сложностей.</p>
-  <div class="steps-grid" style="gap:16px">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <div class="step-title">Пишете менеджеру</div>
-      <div class="step-desc">Оставляете сообщение в Telegram — менеджер отвечает в течение 10–15 минут и уточняет ваш уровень и цели.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <div class="step-title">Получаете консультацию и ссылку</div>
-      <div class="step-desc">Менеджер отправляет короткую инструкцию и ссылку на подключение. Вы проверяете данные и готовите стартовый бюджет.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <div class="step-title">Подключаетесь и получаете первый сигнал</div>
-      <div class="step-desc">После подтверждения доступ активируется, и вы сразу видите первый сигнал с рекомендацией и комментарием.</div>
-    </div>
-  </div>
-</section>
-
-<!-- WHY SIMPLE -->
-<section>
-  <div class="section-label">Простота</div>
-  <h2 class="section-title">Почему система понятна<br>с первого дня</h2>
-  <p class="section-sub">Алгоритм берёт на себя аналитическую работу. Вы получаете готовый контекст — а не сырые данные.</p>
-  <div class="why-free-card">
-    <div>
-      <div class="why-free-icon">🤖</div>
-      <h3 style="font-size:22px;font-weight:700;margin-bottom:16px;letter-spacing:-.5px">Не нужно самому сидеть за графиками часами</h3>
-      <p style="color:var(--muted);font-size:14px;line-height:1.7;font-weight:300">Нейросеть непрерывно мониторит движение цены по десяткам инструментов. Когда появляется сигнал — вы получаете уведомление. Вам остаётся принять решение, опираясь на понятный контекст.</p>
-    </div>
-    <div class="why-points">
-      <div class="why-point"><div class="why-dot"></div><p>Алгоритм отслеживает цену без перерывов — вы не пропускаете ключевые движения</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Сигнал приходит в виде: актив, направление, время сделки — минимум действий с вашей стороны</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Даже новичок быстро разбирается с интерфейсом — сопровождение менеджера ускоряет старт</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Логика каждого сигнала объясняется — вы постепенно понимаете рынок, а не просто следуете алгоритму</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Риск-менеджмент — часть обучения: менеджер объясняет, как управлять размером позиций</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- SIGNALS SHOWCASE -->
-<section id="signals">
-  <div class="section-label">Витрина сигналов</div>
-  <h2 class="section-title">Как выглядят сигналы<br>в интерфейсе</h2>
-  <p class="section-sub">Примеры формата сигналов — актив, направление, время сделки и логика входа.</p>
-  <div class="showcase-grid">
-
-    <div class="sig-card">
-      <div class="sig-card-header">
-        <div><div class="sig-asset">EUR/USD</div><div class="sig-time">M5 · 14:32 MSK</div></div>
-        <div class="sig-badge buy">▲ ВВЕРХ</div>
-      </div>
-      <div class="sig-mini-chart">
-        <svg width="100%" height="60" viewBox="0 0 300 60">
-          <path d="M0,50 L50,45 L100,35 L150,38 L200,20 L250,15 L300,8" fill="none" stroke="#00e676" stroke-width="1.5" opacity=".7"/>
-          <circle cx="200" cy="20" r="4" fill="#00e676"/>
-        </svg>
-      </div>
-      <div class="sig-stats">
-        <div class="sig-stat-item">Паттерн<strong>RSI oversold</strong></div>
-        <div class="sig-stat-item">Сила сигнала<strong style="color:var(--green)">Высокая</strong></div>
-        <div class="sig-stat-item">Время сделки<strong>5 мин</strong></div>
-      </div>
-    </div>
-
-    <div class="sig-card">
-      <div class="sig-card-header">
-        <div><div class="sig-asset">GBP/JPY</div><div class="sig-time">M1 · 14:47 MSK</div></div>
-        <div class="sig-badge sell">▼ ВНИЗ</div>
-      </div>
-      <div class="sig-mini-chart">
-        <svg width="100%" height="60" viewBox="0 0 300 60">
-          <path d="M0,10 L50,15 L100,25 L150,20 L200,35 L250,45 L300,52" fill="none" stroke="#ff5252" stroke-width="1.5" opacity=".7"/>
-          <circle cx="200" cy="35" r="4" fill="#ff5252"/>
-        </svg>
-      </div>
-      <div class="sig-stats">
-        <div class="sig-stat-item">Паттерн<strong>Bollinger upper</strong></div>
-        <div class="sig-stat-item">Сила сигнала<strong style="color:var(--green)">Средняя</strong></div>
-        <div class="sig-stat-item">Время сделки<strong>1 мин</strong></div>
-      </div>
-    </div>
-
-    <div class="sig-card">
-      <div class="sig-card-header">
-        <div><div class="sig-asset">BTC/USD</div><div class="sig-time">M5 · 15:02 MSK</div></div>
-        <div class="sig-badge buy">▲ ВВЕРХ</div>
-      </div>
-      <div class="sig-mini-chart">
-        <svg width="100%" height="60" viewBox="0 0 300 60">
-          <path d="M0,40 L60,42 L100,38 L140,35 L180,30 L220,18 L260,12 L300,8" fill="none" stroke="#00e676" stroke-width="1.5" opacity=".7"/>
-          <circle cx="180" cy="30" r="4" fill="#00e676"/>
-        </svg>
-      </div>
-      <div class="sig-stats">
-        <div class="sig-stat-item">Паттерн<strong>Volume breakout</strong></div>
-        <div class="sig-stat-item">Сила сигнала<strong style="color:var(--green)">Высокая</strong></div>
-        <div class="sig-stat-item">Время сделки<strong>5 мин</strong></div>
-      </div>
-    </div>
-
-    <div class="sig-card">
-      <div class="sig-card-header">
-        <div><div class="sig-asset">XAU/USD</div><div class="sig-time">M15 · 15:18 MSK</div></div>
-        <div class="sig-badge sell">▼ ВНИЗ</div>
-      </div>
-      <div class="sig-mini-chart">
-        <svg width="100%" height="60" viewBox="0 0 300 60">
-          <path d="M0,15 L60,18 L100,22 L140,20 L180,28 L220,36 L260,42 L300,50" fill="none" stroke="#ff5252" stroke-width="1.5" opacity=".7"/>
-          <circle cx="180" cy="28" r="4" fill="#ff5252"/>
-        </svg>
-      </div>
-      <div class="sig-stats">
-        <div class="sig-stat-item">Паттерн<strong>MA crossover</strong></div>
-        <div class="sig-stat-item">Сила сигнала<strong style="color:var(--green)">Средняя</strong></div>
-        <div class="sig-stat-item">Время сделки<strong>15 мин</strong></div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- CALCULATOR -->
-<section id="calculator">
-  <div class="section-label">Калькулятор</div>
-  <h2 class="section-title">Потенциальный результат<br>при разных параметрах</h2>
-  <p class="section-sub">Введите параметры торговли — калькулятор покажет ориентировочный результат. Все цифры — расчётные, а не гарантированные.</p>
-  <div class="calc-wrapper">
-    <div class="calc-grid">
-      <div class="calc-inputs">
-        <div class="calc-field">
-          <div class="calc-field-row">
-            <label>Стартовый депозит</label>
-            <div class="calc-field-val" id="dep-val">$500</div>
-          </div>
-          <input type="range" id="deposit" min="100" max="5000" step="100" value="500" oninput="calcUpdate()"/>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-top:6px"><span>$100</span><span>$5 000</span></div>
-        </div>
-        <div class="calc-field">
-          <div class="calc-field-row">
-            <label>Сделок в день</label>
-            <div class="calc-field-val" id="trades-val">8</div>
-          </div>
-          <input type="range" id="trades" min="3" max="20" step="1" value="8" oninput="calcUpdate()"/>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-top:6px"><span>3</span><span>20</span></div>
-        </div>
-        <div class="calc-field">
-          <div class="calc-field-row">
-            <label>Размер сделки от депозита</label>
-            <div class="calc-field-val" id="size-val">3%</div>
-          </div>
-          <input type="range" id="size" min="1" max="10" step="1" value="3" oninput="calcUpdate()"/>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-top:6px"><span>1%</span><span>10%</span></div>
-        </div>
-        <div class="calc-field">
-          <div class="calc-field-row">
-            <label>Процент прибыльных сделок</label>
-            <div class="calc-field-val" id="wr-val">62%</div>
-          </div>
-          <input type="range" id="winrate" min="50" max="75" step="1" value="62" oninput="calcUpdate()"/>
-          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-top:6px"><span>50%</span><span>75%</span></div>
-        </div>
-        <p style="font-size:13px;color:var(--muted2);line-height:1.6;border-top:1px solid var(--border);padding-top:16px;font-weight:300">
-          Чем выше рабочий депозит — тем шире возможности по управлению риском: меньший процент на сделку при том же абсолютном объёме. Это ключевой элемент адекватного мани-менеджмента.
-        </p>
-      </div>
-      <div class="calc-results">
-        <div style="margin-bottom:8px;font-size:13px;color:var(--muted);font-weight:400">Ориентировочный результат</div>
-        <div class="result-card">
-          <div class="result-label">Дневной результат</div>
-          <div class="result-val" id="r-day">$0</div>
-        </div>
-        <div class="result-card">
-          <div class="result-label">Недельный результат</div>
-          <div class="result-val" id="r-week">$0</div>
-        </div>
-        <div class="result-card highlight">
-          <div class="result-label">Месячный результат</div>
-          <div class="result-val" id="r-month">$0</div>
-        </div>
-        <div class="calc-note">
-          Расчёт носит ориентировочный и иллюстративный характер. Реальный результат зависит от рыночных условий, дисциплины и соблюдения риск-менеджмента. Торговля на финансовых рынках сопряжена с рисками потери капитала.
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- WHY FREE -->
-<section>
-  <div class="section-label">Прозрачность</div>
-  <h2 class="section-title">Почему доступ бесплатный</h2>
-  <p class="section-sub">Честный ответ без воды.</p>
-  <div class="why-free-card">
-    <div>
-      <div class="why-free-icon">💡</div>
-      <h3 style="font-size:22px;font-weight:700;margin-bottom:16px;letter-spacing:-.5px">Партнёрская модель</h3>
-      <p style="color:var(--muted);font-size:14px;line-height:1.7;font-weight:300">Сервис работает по партнёрской модели с брокером. Когда вы регистрируетесь по реферальной ссылке — мы получаем партнёрское вознаграждение от брокера. Именно это позволяет предоставлять доступ к сигналам и сопровождению бесплатно для вас.</p>
-      <p style="color:var(--muted);font-size:14px;line-height:1.7;font-weight:300;margin-top:12px">Никаких скрытых платежей, подписок и комиссий с вашей прибыли — не предусмотрено.</p>
-    </div>
-    <div class="why-points">
-      <div class="why-point"><div class="why-dot"></div><p>Для вас — бесплатный доступ к сигналам и сопровождению</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Партнёрское вознаграждение — от брокера, не от вас</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Регистрация у брокера — стандартная и ни к чему не обязывает</p></div>
-      <div class="why-point"><div class="why-dot"></div><p>Брокер — лицензированная платформа, регистрация занимает минуты</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section id="faq">
-  <div class="section-label">FAQ</div>
-  <h2 class="section-title">Частые вопросы</h2>
-  <p class="section-sub">Всё, что обычно спрашивают перед стартом.</p>
-  <div class="faq-list">
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Почему доступ бесплатный?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Сервис работает по партнёрской модели с брокером. Когда вы регистрируетесь по реферальной ссылке, мы получаем партнёрское вознаграждение — это и покрывает расходы. Для вас доступ остаётся полностью бесплатным.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Как начать?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Напишите менеджеру — он объяснит процесс, направит на регистрацию у брокера и после этого активирует доступ к сигналам. Весь процесс занимает от 10 до 30 минут.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Как это работает?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Алгоритм анализирует движение цены на нескольких инструментах и временах сделки, выявляет паттерны и формирует сигналы. Вы получаете: актив, направление (ВВЕРХ/ВНИЗ) и время сделки. Менеджер помогает разобраться с применением сигналов на практике.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Подойдёт ли это новичку?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Да. Сигналы оформлены просто, без технического перегруза. Менеджер помогает с началом — объясняет интерфейс, риск-менеджмент и логику работы с сигналами. Предыдущий опыт не обязателен.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Нужно ли самому анализировать рынок?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Нет. Алгоритм берёт на себя аналитику. Вам остаётся принимать решения на основе готовых сигналов. Со временем, изучая логику входов, вы начнёте лучше понимать рынок самостоятельно.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Как быстро я получу доступ?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Обычно в течение нескольких часов после регистрации у брокера. Менеджер подтверждает доступ и сразу вводит вас в работу.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Есть ли сопровождение?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Да. Персональный менеджер доступен для вопросов по сигналам, работе платформы и базовому риск-менеджменту. Это не робот — живой человек, который помогает разобраться.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">С какого депозита разумно начинать?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Менеджер обсудит это с вами индивидуально. В целом: чем меньше стартовый депозит — тем важнее строго соблюдать риск-менеджмент и не превышать допустимый размер сделки. Начните с той суммы, потерю которой вы можете себе позволить.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Можно сначала разобраться, а потом увеличивать депозит?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Конечно. Это разумный подход. Начните с минимальной суммы, изучите логику работы с сигналами, освойте риск-менеджмент — и только потом принимайте решение об увеличении объёмов.</div>
-    </div>
-
-    <div class="faq-item">
-      <div class="faq-q" onclick="toggleFaq(this)">Есть ли риски?<span class="faq-icon">+</span></div>
-      <div class="faq-a">Да. Торговля на финансовых рынках всегда сопряжена с риском потери капитала. Сигналы — это аналитический инструмент, а не гарантия результата. Никогда не вкладывайте средства, потерю которых вы не можете себе позволить.</div>
-    </div>
-
-  </div>
-</section>
-
-<!-- FINAL CTA -->
-<div class="final-cta" id="contact">
-  <div class="hero-badge" style="justify-content:center;display:inline-flex;margin-bottom:24px"><span class="pulse"></span> Доступ открыт</div>
-  <h2>Начните с первого сигнала</h2>
-  <p>Напишите менеджеру — он ответит на вопросы и проведёт вас через весь процесс подключения бесплатно.</p>
-  <div class="final-btns">
-    <a href="https://t.me/leomarku?text=Здравствуйте,%20хочу%20получить%20доступ%20к%20AI-сигналам" class="btn-primary" target="_blank" rel="noopener noreferrer">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
-      Написать менеджеру
+    <a href="https://t.me/leomarku" target="_blank" class="vip-prem-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+      СВЯЗАТЬСЯ СО МНОЙ
     </a>
-    <a href="#how" class="btn-secondary">Узнать подробнее</a>
   </div>
-</div>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-logo">NeuralTrade</div>
-  <div class="footer-links">
-    <a href="#contact">Контакты</a>
+  <div class="main-tabs">
+    <button class="main-tab active" onclick="switchTab('analyzer',this)">Анализатор</button>
+    <button class="main-tab" onclick="switchTab('signals',this)">Сигналы Live</button>
+    <button class="main-tab" onclick="switchTab('calc',this)">Калькулятор доходности</button>
   </div>
-  <div class="disclaimer">
-    Информация на данном сайте носит исключительно образовательный и информационный характер и не является инвестиционной рекомендацией, финансовым советом или призывом к совершению каких-либо торговых операций. Торговля на финансовых рынках сопряжена со значительным риском потери капитала. Перед началом торговли ознакомьтесь со всеми рисками. Прошлые результаты не гарантируют аналогичных результатов в будущем. © 2025 NeuralTrade. Все права защищены.
+
+  <div id="tab-analyzer">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Выберите актив</span>
+          <span style="font-size:11px;color:var(--muted)">Биржевые & OTC</span>
+        </div>
+        <div class="card-body">
+          <div class="cat-filter" id="catFilter">
+            <button class="cat-btn active" onclick="setCat('all',this)">Все</button>
+            <button class="cat-btn" onclick="setCat('forex',this)">Валюты</button>
+            <button class="cat-btn" onclick="setCat('otc',this)">OTC</button>
+            <button class="cat-btn" onclick="setCat('crypto',this)">Крипто</button>
+            <button class="cat-btn" onclick="setCat('commodities',this)">Сырьё</button>
+            <button class="cat-btn" onclick="setCat('stocks',this)">Акции</button>
+          </div>
+          <div class="assets-list" id="assetsList"></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-header">
+            <span class="card-title">Время сделки</span>
+            <span style="font-size:11px;color:var(--green)" id="selTimeLbl">—</span>
+          </div>
+          <div class="card-body">
+            <div class="time-select">
+              <button class="time-btn active" data-t="1" onclick="setTime(this)">1 мин</button>
+              <button class="time-btn" data-t="2" onclick="setTime(this)">2 мин</button>
+              <button class="time-btn" data-t="3" onclick="setTime(this)">3 мин</button>
+              <button class="time-btn" data-t="4" onclick="setTime(this)">4 мин</button>
+              <button class="time-btn" data-t="5" onclick="setTime(this)">5 мин</button>
+            </div>
+
+            <div style="margin-bottom:14px;padding:10px 14px;background:rgba(0,0,0,0.2);border-radius:9px;border:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--muted2);margin-bottom:4px">Выбран актив</div>
+              <div style="font-size:14px;font-weight:700;font-family:var(--mono)" id="selAssetLbl">Не выбран</div>
+            </div>
+
+            <button class="analyze-btn" id="azBtn" onclick="runAnalysis()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" opacity=".3"/><path d="M21 12a9 9 0 00-9-9"/></svg>
+              Анализировать с ИИ
+            </button>
+            <div class="loader-bar" id="loaderBar"><div class="loader-fill" id="loaderFill"></div></div>
+            <div class="loader-text" id="loaderTxt">СКАНИРОВАНИЕ...</div>
+          </div>
+        </div>
+
+        <div class="result-panel" id="resultPanel">
+          <div class="result-empty">
+            <div class="result-empty-icon">📡</div>
+            <p>Выберите актив и время сделки,<br>затем нажмите «Анализировать с ИИ»</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-</footer>
 
-<!-- MOBILE CTA -->
-<div class="mobile-cta">
-  <a href="https://t.me/leomarku?text=Здравствуйте,%20хочу%20получить%20доступ%20к%20AI-сигналам" class="btn-primary" target="_blank" rel="noopener noreferrer">Доступ к сигналам бесплатно →</a>
-</div>
+  <div id="tab-signals" class="signals-section">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Live сигналы нейросети</span>
+        <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green)">
+          <span class="online-dot"></span>В реальном времени
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="mini-signals" id="liveSignals"></div>
+      </div>
+    </div>
+  </div>
 
-<div class="desktop-widget">
-  <a href="https://t.me/leomarku?text=Здравствуйте,%20хочу%20получить%20доступ%20к%20AI-сигналам" target="_blank" rel="noopener noreferrer">
-    <span class="widget-title">Написать менеджеру</span>
-    <span class="widget-sub">Ответим и объясним старт</span>
-  </a>
+  <div id="tab-calc" class="calc-section">
+    <div class="grid2">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Параметры расчёта</span></div>
+        <div class="card-body">
+          <div class="calc-fields">
+            <div class="field-group">
+              <label>Депозит ($)</label>
+              <div class="field-row">
+                <input type="range" id="cDep" min="10" max="10000" step="10" value="500" oninput="calcUpdate()"/>
+                <div class="field-val" id="cDepV">$500</div>
+              </div>
+              <div class="field-limits"><span>$10</span><span>$10 000</span></div>
+            </div>
+            <div class="field-group">
+              <label>% от депозита на сделку</label>
+              <div class="field-row">
+                <input type="range" id="cPct" min="1" max="30" step="1" value="5" oninput="calcUpdate()"/>
+                <div class="field-val" id="cPctV">5%</div>
+              </div>
+              <div class="field-limits"><span>1%</span><span>30%</span></div>
+            </div>
+            <div class="field-group">
+              <label>Количество сделок в день</label>
+              <div class="field-row">
+                <input type="range" id="cTrades" min="1" max="50" step="1" value="15" oninput="calcUpdate()"/>
+                <div class="field-val" id="cTradesV">15</div>
+              </div>
+              <div class="field-limits"><span>1</span><span>50</span></div>
+            </div>
+            <div class="field-group">
+              <label>Выплата брокера (%)</label>
+              <div class="field-row">
+                <input type="range" id="cPay" min="70" max="94" step="1" value="84" oninput="calcUpdate()"/>
+                <div class="field-val" id="cPayV">84%</div>
+              </div>
+              <div class="field-limits"><span>70%</span><span>94%</span></div>
+            </div>
+            <div class="field-group">
+              <label>Winrate ИИ (в среднем)</label>
+              <div class="field-row">
+                <input type="range" id="cWin" min="50" max="95" step="1" value="82" oninput="calcUpdate()"/>
+                <div class="field-val" id="cWinV">82%</div>
+              </div>
+              <div class="field-limits"><span>50%</span><span>95%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Потенциальная доходность</span></div>
+        <div class="card-body">
+          <div class="calc-results" id="calcResults"></div>
+          <div style="margin-top:20px; font-size:11px; color:var(--muted); line-height:1.5; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border:1px solid var(--border);">
+            💡 <b>Подсказка:</b> Расчет сделан с учетом математического ожидания. Нейросеть SIGNAL PRO позволяет держать винрейт на уровне 80-85% при соблюдении риск-менеджмента. Строго следуйте сигналам для достижения таких результатов.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// TRANSLATIONS
-const translations = {
-  ru: {
-    'nav.features': 'Возможности',
-    'nav.how': 'Как работает',
-    'nav.signals': 'Сигналы',
-    'nav.calculator': 'Калькулятор',
-    'nav.faq': 'FAQ',
-    'nav.cta': 'Доступ к сигналам бесплатно',
-    'hero.badge': 'AI-анализ работает в реальном времени',
-    'hero.h1.1': 'Торговые сигналы',
-    'hero.h1.2': 'на основе ',
-    'hero.h1.3': 'нейросети',
-    'hero.h1.4': 'для трейдеров',
-    'hero.lead': 'Алгоритм непрерывно сканирует рынок, выявляет паттерны и формирует понятные сигналы. Вы получаете чёткий контекст для принятия решений — без лишнего шума.',
-    'hero.btn.primary': 'Получить доступ бесплатно',
-    'hero.btn.secondary': 'Как это работает →',
-    'hero.trust.1': 'Доступ через менеджера',
-    'hero.trust.2': 'Подключение бесплатно',
-    'hero.trust.3': 'Подходит для новичков',
-    'hero.trust.4': 'Мультиактивный охват',
-    'stats.traders': 'Трейдеров подключено',
-    'stats.assets': 'Торговых инструментов',
-    'stats.entry': 'Среднее время входа в сделку',
-    'stats.work': 'Работа алгоритма',
-    'features.label': 'Возможности',
-    'features.title': 'Что вы получаете',
-    'features.title.2': 'после подключения',
-    'features.sub': 'Всё необходимое для старта — от первого сигнала до понимания логики рынка.',
-    'features.1.title': 'Сигналы в реальном времени',
-    'features.1.desc': 'Алгоритм анализирует движение цены и формирует сигналы без задержки. Вы видите актив, направление и время сделки.',
-    'features.2.title': 'Понятный старт',
-    'features.2.desc': 'Вам не нужен многолетний опыт. Интерфейс читается за минуты — сигналы оформлены ясно и без технического перегруза.',
-    'features.3.title': 'Сопровождение менеджера',
-    'features.3.desc': 'Персональный менеджер помогает разобраться с платформой, ответит на вопросы и поддержит на старте.',
-    'features.4.title': 'AI-анализ рынка',
-    'features.4.desc': 'Нейросеть отслеживает паттерны на нескольких временах сделки одновременно — то, что человек физически не успевает охватить.',
-    'features.5.title': 'Статистика и примеры входов',
-    'features.5.desc': 'История сигналов с пояснением логики. Вы видите, почему алгоритм принял то или иное решение.',
-    'features.6.title': 'Объяснение логики',
-    'features.6.desc': 'Не просто сигнал, а обучение. Разбираете паттерны вместе с менеджером, постепенно формируя собственное понимание.'
-  }
+// =========== CLEANED ASSETS FOR BINARIUM / POCKET OPTION ===========
+const ASSETS = [
+  // FOREX
+  {id:'eurusd',name:'EUR/USD',cat:'forex',icon:'🇪🇺🇺🇸',p1:82,p5:76},
+  {id:'gbpusd',name:'GBP/USD',cat:'forex',icon:'🇬🇧🇺🇸',p1:81,p5:74},
+  {id:'usdjpy',name:'USD/JPY',cat:'forex',icon:'🇺🇸🇯🇵',p1:80,p5:75},
+  {id:'audusd',name:'AUD/USD',cat:'forex',icon:'🇦🇺🇺🇸',p1:78,p5:73},
+  {id:'usdcad',name:'USD/CAD',cat:'forex',icon:'🇺🇸🇨🇦',p1:79,p5:72},
+  {id:'usdchf',name:'USD/CHF',cat:'forex',icon:'🇺🇸🇨🇭',p1:80,p5:78},
+  // OTC
+  {id:'eurusd_otc',name:'EUR/USD (OTC)',cat:'otc',icon:'⚡',p1:92,p5:90},
+  {id:'gbpusd_otc',name:'GBP/USD (OTC)',cat:'otc',icon:'⚡',p1:92,p5:90},
+  {id:'usdjpy_otc',name:'USD/JPY (OTC)',cat:'otc',icon:'⚡',p1:92,p5:90},
+  {id:'audcad_otc',name:'AUD/CAD (OTC)',cat:'otc',icon:'⚡',p1:92,p5:90},
+  // CRYPTO
+  {id:'btcusd',name:'BITCOIN',cat:'crypto',icon:'₿',p1:85,p5:80},
+  {id:'ethusd',name:'ETHEREUM',cat:'crypto',icon:'Ξ',p1:84,p5:78},
+  {id:'ltcusd',name:'LITECOIN',cat:'crypto',icon:'Ł',p1:80,p5:75},
+  // COMMODITIES
+  {id:'gold',name:'Gold (XAU/USD)',cat:'commodities',icon:'🥇',p1:85,p5:77},
+  {id:'silver',name:'Silver (XAG/USD)',cat:'commodities',icon:'🥈',p1:83,p5:75},
+  {id:'oil',name:'Crude Oil',cat:'commodities',icon:'🛢️',p1:82,p5:74},
+  // STOCKS
+  {id:'apple',name:'APPLE',cat:'stocks',icon:'🍎',p1:86,p5:80},
+  {id:'google',name:'GOOGLE',cat:'stocks',icon:'G',p1:85,p5:78},
+  {id:'amazon',name:'AMAZON',cat:'stocks',icon:'A',p1:84,p5:77},
+  {id:'meta',name:'META',cat:'stocks',icon:'M',p1:82,p5:75}
+];
+
+const STRATEGIES = {
+  up:[
+    {n:'Нейросетевой паттерн X-1',d:'Глубинное обучение выявило сильный кластер покупателей. Цена закрепилась выше динамического уровня поддержки ИИ. Ожидается импульсный рост.'},
+    {n:'Алгоритм перепроданности',d:'Мульти-таймфрейм анализ RSI и стохастика указывает на экстремальную перепроданность. Объемы на покупку резко возрастают согласно биржевым данным.'},
+    {n:'Пробой ИИ-уровня',d:'Нейросеть зафиксировала пробой алгоритмического сопротивления. Давление продавцов полностью истощено.'},
+    {n:'Аномальный объем (Call)',d:'Датчики ликвидности зафиксировали крупное вливание капитала в восходящем направлении. Сигнал на присоединение к тренду.'}
+  ],
+  dn:[
+    {n:'Нейросетевой паттерн Y-2',d:'ИИ зафиксировал критическую перекупленность актива. Формируется каскадное закрытие лонгов, что приведет к резкому снижению цены.'},
+    {n:'Алгоритм сопротивления',d:'Цена достигла скрытой зоны алгоритмического сопротивления. Модели машинного обучения предсказывают отскок вниз с вероятностью 89%.'},
+    {n:'Отторжение объема (Put)',d:'Продавцы перехватили инициативу. Фиксируется резкий отток ликвидности. Скользящие средние ИИ разворачиваются вниз.'},
+    {n:'Медвежья дивергенция ИИ',d:'Скрытая дивергенция подтверждена нейросетью. Покупательская способность на исходе, ожидается медвежий импульс.'}
+  ]
 };
 
-let currentLang = localStorage.getItem('lang') || 'ru';
+const TAGS_UP = ['AI-BUY','Vol↑','Trend+','Liquidity↑','SmartMoney+'];
+const TAGS_DN = ['AI-SELL','Vol↓','Trend-','Liquidity↓','SmartMoney-'];
 
-function updatePageLanguage() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (translations[currentLang][key]) {
-      el.textContent = translations[currentLang][key];
+let selAsset = null;
+let selTime = 1;
+let curCat = 'all';
+
+function initTelegram(){
+  if(window.Telegram?.WebApp){
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
+  }
+}
+
+// =========== ONLINE COUNTER ===========
+function randomOnline(){return Math.floor(1000+Math.random()*7300)}
+function updateOnline(){
+  const el = document.getElementById('onlineCount');
+  const target = randomOnline();
+  const cur = parseInt(el.textContent.replace(/\s/g,''))||1000;
+  const diff = target - cur;
+  const step = diff/20;
+  let i=0;
+  const iv = setInterval(()=>{
+    i++;
+    const val = Math.round(cur+step*i);
+    el.textContent = val.toLocaleString('ru');
+    if(i>=20){el.textContent=target.toLocaleString('ru');clearInterval(iv)}
+  },30);
+}
+updateOnline();
+setInterval(()=>{
+  const cur = parseInt(document.getElementById('onlineCount').textContent.replace(/\s|,/g,''))||1000;
+  const delta = Math.floor((Math.random()-.4)*120);
+  let next = Math.max(1000,Math.min(8300,cur+delta));
+  document.getElementById('onlineCount').textContent = next.toLocaleString('ru');
+},4000);
+
+// =========== ASSETS LIST ===========
+function renderAssets(){
+  const list = document.getElementById('assetsList');
+  const filtered = curCat==='all' ? ASSETS : ASSETS.filter(a=>a.cat===curCat);
+  list.innerHTML = filtered.map(a=>`
+    <div class="asset-row${selAsset&&selAsset.id===a.id?' selected':''}" onclick="selectAsset('${a.id}')">
+      <div class="asset-icon" style="background:rgba(255,255,255,0.04)">${a.icon}</div>
+      <div class="asset-name">
+        <div class="asset-name-main">${a.name}</div>
+        <div class="asset-name-sub">${catLabel(a.cat)}</div>
+      </div>
+      <div class="asset-payouts">
+        <div class="payout-badge">${a.p1}%</div>
+        <div class="payout-badge ${a.p5?'':'disabled'}">${a.p5?a.p5+'%':'—'}</div>
+      </div>
+      <div class="asset-check">${selAsset&&selAsset.id===a.id?'✓':''}</div>
+    </div>
+  `).join('');
+}
+function catLabel(c){return{forex:'Валютная пара',crypto:'Криптовалюта',stocks:'Акция',commodities:'Сырьё',otc:'OTC Внебиржевой'}[c]||c}
+function selectAsset(id){
+  selAsset = ASSETS.find(a=>a.id===id);
+  document.getElementById('selAssetLbl').textContent = selAsset?selAsset.name:'Не выбран';
+  renderAssets();
+}
+function setCat(cat,btn){
+  curCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAssets();
+}
+
+// =========== TIME ===========
+function setTime(btn){
+  selTime = parseInt(btn.dataset.t);
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('selTimeLbl').textContent = selTime+' мин';
+}
+document.getElementById('selTimeLbl').textContent = '1 мин';
+
+// =========== ANALYSIS (UNLOCKED) ===========
+const LOADER_MSGS = ['СКАНИРОВАНИЕ РЫНКА...','АНАЛИЗ НЕЙРОСЕТЬЮ...','РАСЧЕТ ЛИКВИДНОСТИ...','ФОРМИРОВАНИЕ СИГНАЛА...'];
+
+function runAnalysis(){
+  if(!selAsset){alert('Пожалуйста, выберите актив для анализа');return}
+
+  const btn = document.getElementById('azBtn');
+  const bar = document.getElementById('loaderBar');
+  const fill = document.getElementById('loaderFill');
+  const txt = document.getElementById('loaderTxt');
+  const panel = document.getElementById('resultPanel');
+
+  btn.disabled=true; btn.classList.add('loading');
+  bar.classList.add('show'); txt.classList.add('show');
+  panel.innerHTML='';
+
+  let prog=0,msgIdx=0;
+  const iv = setInterval(()=>{
+    prog = Math.min(prog+Math.random()*8+2,95);
+    fill.style.width = prog+'%';
+    if(Math.floor(prog/25)>msgIdx){
+      msgIdx=Math.floor(prog/25);
+      txt.textContent = LOADER_MSGS[Math.min(msgIdx,LOADER_MSGS.length-1)];
     }
-  });
-  const langSel = document.getElementById('langSelector');
-  if (langSel) langSel.value = currentLang;
+  },100);
+
+  setTimeout(()=>{
+    clearInterval(iv);
+    fill.style.width='100%';
+    setTimeout(()=>{
+      btn.disabled=false; btn.classList.remove('loading');
+      bar.classList.remove('show'); txt.classList.remove('show');
+      fill.style.width='0%';
+      showResult();
+    },300);
+  },2000);
 }
 
-function changeLang(lang) {
-  currentLang = lang;
-  localStorage.setItem('lang', lang);
-  updatePageLanguage();
+function showResult(){
+  const dir = Math.random()<.52?'up':'dn';
+  const isUp = dir==='up';
+  const pool = STRAT(isUp);
+  const s = pool[Math.floor(Math.random()*pool.length)];
+  const tags = (isUp?TAGS_UP:TAGS_DN).slice().sort(()=>Math.random()-.5).slice(0,4);
+
+  // Высокий AI винрейт
+  const base = selTime===1 ? selAsset.p1 : (selAsset.p5||selAsset.p1-8);
+  const succ = Math.max(82,Math.min(98,base + Math.floor(Math.random()*15)));
+
+  const strColor = succ>=90?'var(--green)':'var(--amber)';
+  const arrow = isUp?'↑':'↓';
+  const label = isUp?'ВВЕРХ (CALL)':'ВНИЗ (PUT)';
+  const timeLabel = selTime+' мин';
+
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="signal-card ${dir}">
+      <div class="signal-top">
+        <div class="signal-dir-wrap">
+          <div class="signal-arrow ${dir}">${arrow}</div>
+          <div>
+            <div class="signal-dir ${dir}">${label}</div>
+            <div class="signal-asset">${selAsset.name} · ${timeLabel}</div>
+          </div>
+        </div>
+        <div class="signal-pct-wrap">
+          <div class="signal-pct ${dir}">${succ}%</div>
+          <div class="signal-pct-label">Точность ИИ</div>
+        </div>
+      </div>
+
+      <div class="pct-bar"><div class="pct-fill ${dir}" id="pctFill" style="width:0%"></div></div>
+
+      <div class="signal-meta">
+        <div class="meta-box">
+          <div class="meta-label">Сила сигнала</div>
+          <div class="meta-val" style="color:${strColor}">${succ>=90?'Высокая':'Умеренная'}</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Экспирация</div>
+          <div class="meta-val">${timeLabel}</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">Платформа</div>
+          <div class="meta-val" style="color:var(--text); font-size: 10px;">Binarium/PO</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="why-label">🧠 Решение нейросети · ${s.n}</div>
+      <div class="why-text">${s.d}</div>
+      <div class="ind-tags">${tags.map(t=>`<span class="ind-tag ${dir}">${t}</span>`).join('')}</div>
+    </div>
+  `;
+  setTimeout(()=>{
+    const pf = document.getElementById('pctFill');
+    if(pf) pf.style.width=succ+'%';
+  },100);
 }
 
-// Initialize language on page load
-document.addEventListener('DOMContentLoaded', () => {
-  updatePageLanguage();
-});
+function STRAT(isUp){return isUp?STRATEGIES.up:STRATEGIES.dn}
 
-// CALCULATOR
+// =========== LIVE SIGNALS ===========
+const LIVE_PAIRS = ASSETS.map(a=>a.name);
+function genLiveSignal(){
+  const pair = LIVE_PAIRS[Math.floor(Math.random()*LIVE_PAIRS.length)];
+  const dir = Math.random()<.52?'buy':'sell';
+  const time = Math.floor(Math.random()*5)+1;
+  const pct = 80+Math.floor(Math.random()*18); // High winrate
+  const ago = Math.floor(Math.random()*40)+1;
+  return {pair,dir,time,pct,ago};
+}
+function renderLiveSignals(){
+  const container = document.getElementById('liveSignals');
+  const sigs = Array.from({length:10},genLiveSignal);
+  container.innerHTML = sigs.map((s,i)=>`
+    <div class="mini-sig">
+      <div class="mini-sig-pair">${s.pair}</div>
+      <div class="mini-sig-time">${s.time} мин</div>
+      <div class="mini-sig-dir ${s.dir}">${s.dir==='buy'?'▲ ВВЕРХ':'▼ ВНИЗ'}</div>
+      <div class="mini-sig-pct ${s.dir==='buy'?'up':'dn'}">${s.pct}%</div>
+      <div class="mini-sig-ago">${s.ago}с назад</div>
+    </div>
+  `).join('');
+}
+
+// Auto update live signals
+setInterval(()=>{
+  if(document.getElementById('tab-signals').style.display!=='none'){
+    const container=document.getElementById('liveSignals');
+    if(container&&container.children.length){
+      const newSig=genLiveSignal();
+      const div=document.createElement('div');
+      div.className='mini-sig';
+      div.innerHTML=`<div class="mini-sig-pair">${newSig.pair}</div><div class="mini-sig-time">${newSig.time} мин</div><div class="mini-sig-dir ${newSig.dir}">${newSig.dir==='buy'?'▲ ВВЕРХ':'▼ ВНИЗ'}</div><div class="mini-sig-pct ${newSig.dir==='buy'?'up':'dn'}">${newSig.pct}%</div><div class="mini-sig-ago">только что</div>`;
+      container.insertBefore(div,container.firstChild);
+      if(container.children.length>12) container.removeChild(container.lastChild);
+    }
+  }
+},3000);
+
+// =========== CALCULATOR ===========
 function calcUpdate(){
-  const dep = +document.getElementById('deposit').value;
-  const trades = +document.getElementById('trades').value;
-  const size = +document.getElementById('size').value / 100;
-  const wr = +document.getElementById('winrate').value / 100;
+  const dep = +document.getElementById('cDep').value;
+  const pct = +document.getElementById('cPct').value/100;
+  const trades = +document.getElementById('cTrades').value;
+  const pay = +document.getElementById('cPay').value/100;
+  const win = +document.getElementById('cWin').value/100;
 
-  document.getElementById('dep-val').textContent = '$' + dep.toLocaleString();
-  document.getElementById('trades-val').textContent = trades;
-  document.getElementById('size-val').textContent = Math.round(size*100) + '%';
-  document.getElementById('wr-val').textContent = Math.round(wr*100) + '%';
+  document.getElementById('cDepV').textContent = '$'+dep.toLocaleString('ru');
+  document.getElementById('cPctV').textContent = Math.round(pct*100)+'%';
+  document.getElementById('cTradesV').textContent = trades;
+  document.getElementById('cPayV').textContent = Math.round(pay*100)+'%';
+  document.getElementById('cWinV').textContent = Math.round(win*100)+'%';
 
-  const tradeAmt = dep * size;
-  const payout = 0.82;
-  const wins = trades * wr;
-  const losses = trades * (1 - wr);
-  const dayResult = wins * tradeAmt * payout - losses * tradeAmt;
+  const stake = dep*pct;
+  const wins = trades*win;
+  const losses = trades*(1-win);
+  const dayProfit = wins*stake*pay - losses*stake;
+  const weekProfit = dayProfit*5;
+  const monthProfit = dayProfit*22;
+  const roi = (dayProfit/dep)*100;
 
-  const weekResult = dayResult * 5;
-  const monthResult = dayResult * 22;
+  const fmt = (v,pre=true)=>{
+    const abs = Math.abs(Math.round(v));
+    const sign = v>=0?'+':'−';
+    return (pre?sign:'')+'$'+abs.toLocaleString('ru');
+  };
+  const col = (v)=>v>=0?'var(--green)':'var(--red)';
 
-  const fmt = (n) => (n >= 0 ? '+' : '') + '$' + Math.abs(Math.round(n)).toLocaleString();
-
-  document.getElementById('r-day').textContent = fmt(dayResult);
-  document.getElementById('r-week').textContent = fmt(weekResult);
-  document.getElementById('r-month').textContent = fmt(monthResult);
-
-  const col = monthResult >= 0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('r-month').style.color = col;
-  document.getElementById('r-day').style.color = dayResult >= 0 ? 'var(--text)' : 'var(--red)';
-  document.getElementById('r-week').style.color = weekResult >= 0 ? 'var(--text)' : 'var(--red)';
+  document.getElementById('calcResults').innerHTML = `
+    <div class="calc-res-card">
+      <div class="calc-res-label">Сумма одной сделки</div>
+      <div class="calc-res-val" style="color:var(--blue)">$${Math.round(stake).toLocaleString('ru')}</div>
+    </div>
+    <div class="calc-res-card">
+      <div class="calc-res-label">Побед / Поражений</div>
+      <div class="calc-res-val" style="color:var(--text);font-size:16px">${Math.round(wins)} / ${Math.round(losses)}</div>
+    </div>
+    <div class="calc-res-card">
+      <div class="calc-res-label">Прибыль за день</div>
+      <div class="calc-res-val" style="color:${col(dayProfit)}">${fmt(dayProfit)}</div>
+    </div>
+    <div class="calc-res-card">
+      <div class="calc-res-label">ROI в день</div>
+      <div class="calc-res-val" style="color:${col(roi)}">${roi>=0?'+':''}${roi.toFixed(1)}%</div>
+    </div>
+    <div class="calc-res-card">
+      <div class="calc-res-label">Прибыль за неделю</div>
+      <div class="calc-res-val" style="color:${col(weekProfit)}">${fmt(weekProfit)}</div>
+    </div>
+    <div class="calc-res-card">
+      <div class="calc-res-label">Прибыль за месяц</div>
+      <div class="calc-res-val" style="color:${col(monthProfit)}">${fmt(monthProfit)}</div>
+    </div>
+    <div class="calc-res-card main">
+      <div class="calc-res-label">Итоговый баланс за месяц</div>
+      <div class="calc-res-val">$${Math.max(0,Math.round(dep+monthProfit)).toLocaleString('ru')}</div>
+    </div>
+  `;
 }
+
+// =========== TABS ===========
+function switchTab(tab,btn){
+  document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-analyzer').style.display='none';
+  document.getElementById('tab-signals').style.display='none';
+  document.getElementById('tab-calc').style.display='none';
+  document.getElementById('tab-'+tab).style.display='block';
+  if(tab==='signals') renderLiveSignals();
+  if(tab==='calc') calcUpdate();
+}
+// Show analyzer by default
+document.getElementById('tab-signals').style.display='none';
+document.getElementById('tab-calc').style.display='none';
+
+// =========== INIT ===========
+initTelegram();
+renderAssets();
 calcUpdate();
-
-// FAQ
-function toggleFaq(el){
-  const item = el.closest('.faq-item');
-  const isOpen = item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-  if(!isOpen) item.classList.add('open');
-}
-
-// COUNTER ANIMATION
-function animateCounters(){
-  document.querySelectorAll('.count-num').forEach(el => {
-    const target = +el.dataset.target;
-    const duration = 1800;
-    const step = target / (duration / 16);
-    let current = 0;
-    const timer = setInterval(() => {
-      current += step;
-      if(current >= target){ current = target; clearInterval(timer); }
-      el.textContent = Math.floor(current).toLocaleString();
-    }, 16);
-  });
-}
-
-// INTERSECTION OBSERVER for counters
-const statsSection = document.querySelector('.stats-row');
-if(statsSection){
-  const obs = new IntersectionObserver((entries) => {
-    if(entries[0].isIntersecting){ animateCounters(); obs.disconnect(); }
-  }, {threshold: 0.3});
-  obs.observe(statsSection);
-}
-
-// SCROLL REVEAL
-const revealEls = document.querySelectorAll('.feature-card, .step-card, .sig-card, .faq-item');
-const revObs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if(e.isIntersecting){
-      e.target.style.opacity = '1';
-      e.target.style.transform = 'translateY(0)';
-    }
-  });
-}, {threshold: 0.1});
-revealEls.forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(24px)';
-  el.style.transition = 'opacity .5s ease, transform .5s ease';
-  revObs.observe(el);
-});
-
-function trackCtaEvent(source){
-  const eventData = { event: 'cta_click', source };
-  if(window.dataLayer){ window.dataLayer.push(eventData); }
-  if(window.gtag){ window.gtag('event', 'cta_click', { event_category: 'engagement', event_label: source }); }
-  console.log('CTA click', eventData);
-}
-
-document.querySelectorAll('a[href*="t.me/leomarku"]').forEach(link => {
-  link.addEventListener('click', () => trackCtaEvent('telegram_cta'));
-});
 </script>
 </body>
 </html>
