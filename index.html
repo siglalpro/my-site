@@ -599,7 +599,6 @@ function startCooldownTimer() {
 
 document.getElementById('headerTier').textContent = config.name;
 document.getElementById('headerTier').className = 'tier-badge tier-' + userTier;
-if(userTier === 'vip') document.getElementById('vipPromoBlock').style.display = 'none';
 updateEnergyUI();
 
 if(window.Telegram?.WebApp) {
