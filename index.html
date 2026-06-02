@@ -848,6 +848,12 @@ function runAnalysis(){
 }
 
 function showResult(){
+  // --- НАЧАЛО: ОТПРАВКА СТАТИСТИКИ В БОТА ---
+  if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    fetch(`http://132.243.213.180:8080/postback/deal?user_id=${Telegram.WebApp.initDataUnsafe.user.id}`)
+      .catch(e => console.log('Deal track error'));}
+  // --- КОНЕЦ: ОТПРАВКА СТАТИСТИКИ В БОТА ---
+
   const isUp = Math.random() < 0.5;
   const dir = isUp ? 'up' : 'dn';
   const stratList = isUp ? STRATEGIES.up : STRATEGIES.dn;
