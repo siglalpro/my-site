@@ -1,1044 +1,882 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SIGNAL PRO — AI Анализатор</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0D1421;--bg2:#111B2E;--bg3:#162035;--card:#1A2640;--card2:#1F2E47;
-  --border:#243350;--soft:#2A3D5C;
-  --green:#00E676;--green2:#00C853;--green-dim:rgba(0,230,118,0.1);--green-glow:rgba(0,230,118,0.25);
-  --red:#FF3D5A;--red-dim:rgba(255,61,90,0.1);
-  --blue:#00CFFF;--blue-dim:rgba(0,207,255,0.1);
-  --amber:#FFD700;--amber-dim:rgba(255,215,0,0.12);
-  --text:#E8EDF5;--muted:#7A8FAD;--muted2:#4A5E7A;
-  --mono:'JetBrains Mono',monospace;
-  --font:'Exo 2',sans-serif;
-}
-html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden; -webkit-tap-highlight-color: transparent;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Signal Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        /* =========================================
+           БАЗОВЫЕ СТИЛИ И ПЕРЕМЕННЫЕ
+        ========================================= */
+        :root {
+            --bg-color: #0d0f12;
+            --bg-secondary: #1a1d24;
+            --text-color: #ffffff;
+            --text-muted: #8b92a5;
+            --accent-blue: #2962ff;
+            --accent-green: #00c853;
+            --accent-red: #ff3d00;
+            --accent-orange: #ff8a00;
+            --accent-pink: #e52e71;
+            --border-color: #2b3040;
+        }
 
-/* GRID BG */
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,118,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.02) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
-body::after{content:'';position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(0,207,255,0.05) 0%,transparent 70%);pointer-events:none;z-index:0}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-/* HEADER */
-header{position:sticky;top:0;z-index:100;background:rgba(13,20,33,0.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--green),#00BFA5);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#0D1421}
-.logo-text{font-weight:800;font-size:16px;letter-spacing:-.5px}
-.logo-text span{color:var(--green)}
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 15px;
+            padding-bottom: 30px;
+        }
 
-.header-stats {display:flex; align-items:center; gap:12px;}
-.energy-badge {display:flex; align-items:center; gap:6px; background:var(--card2); border:1px solid var(--border); border-radius:8px; padding:4px 10px; font-size:12px; font-family:var(--mono); font-weight:700; color:var(--blue);}
-.energy-badge svg {width:14px; height:14px; fill:var(--blue);}
-.energy-badge.empty {color:var(--red); border-color:rgba(255,61,90,0.3);}
-.energy-badge.empty svg {fill:var(--red);}
+        /* =========================================
+           ШАПКА И ИНДИКАТОРЫ
+        ========================================= */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-.tier-badge {display:flex; align-items:center; padding:4px 8px; border-radius:6px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;}
-.tier-demo {background:rgba(255,255,255,0.05); color:#aaa; border:1px solid rgba(255,255,255,0.1);}
-.tier-start {background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);}
-.tier-pro {background:var(--blue-dim); color:var(--blue); border:1px solid rgba(0,207,255,0.3);}
-.tier-vip {background:var(--amber-dim); color:var(--amber); border:1px solid rgba(255,215,0,0.3);}
+        .app-title {
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #fff, #8b92a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-/* LAYOUT */
-.wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+        /* ФИШКА 1: Кликабельный статус пользователя */
+        .status-badge {
+            background: linear-gradient(90deg, var(--accent-orange), var(--accent-pink));
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(229, 46, 113, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .status-badge:active {
+            transform: scale(0.95);
+        }
 
-/* MOTIVATIONAL BANNER */
-.motivational-banner {background: linear-gradient(90deg, rgba(0, 230, 118, 0.1), rgba(0, 207, 255, 0.1)); border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 12px; padding: 16px; margin-bottom: 20px; text-align: center; font-size: 13px; line-height: 1.5;}
-.motivational-banner b {color: var(--green); font-weight: 800; text-transform: uppercase;}
+        /* ФИШКА 2: Динамический FOMO баннер */
+        .fomo-banner {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(255, 65, 108, 0.3);
+        }
 
-/* HERO STRIP */
-.hero-strip{background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(0,207,255,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:16px;padding:20px;display:flex;flex-direction:column; gap:16px;margin-bottom:20px;}
-.hero-left h1{font-size:20px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px; line-height: 1.3;}
-.hero-left h1 em{font-style:normal;color:var(--green)}
-.hero-left p{font-size:13px;color:var(--muted);font-weight:400; line-height: 1.5;}
+        /* =========================================
+           ОСНОВНОЙ КОНТЕЙНЕР И ВИДЖЕТЫ
+        ========================================= */
+        .main-content {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
 
-.yt-btn {background: linear-gradient(135deg, #FF0000, #CC0000); color: #FFFFFF; font-weight: 800; border: none; border-radius: 8px; padding: 10px 16px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2); margin-top: 12px; text-transform: uppercase;}
+        .tv-widget-container {
+            width: 100%;
+            height: 250px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
 
-/* ELITE BANNER */
-.vip-premium-card {background: linear-gradient(135deg, #1A1500, #332800); border: 1px solid rgba(255, 215, 0, 0.5); border-radius: 16px; padding: 20px; margin-bottom: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 10px 30px rgba(255, 215, 0, 0.15);}
-.vip-prem-title {font-size: 18px; font-weight: 900; color: var(--amber); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);}
-.vip-prem-text {font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 18px; font-weight: 400;}
-.vip-prem-text b {color: #fff;}
-.vip-prem-btn {background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; font-weight: 900; border: none; border-radius: 10px; padding: 14px 24px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4); text-transform: uppercase; transition: transform 0.2s;}
-.vip-prem-btn:active {transform: scale(0.95);}
+        /* =========================================
+           ЭЛЕМЕНТЫ УПРАВЛЕНИЯ
+        ========================================= */
+        .controls-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
 
-/* TABS */
-.main-tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px;width:100%; overflow-x: auto;}
-.main-tab{flex:1; padding:10px 0; border-radius:9px; border:none; background:transparent; color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; font-family:var(--font); transition:all .2s; text-align:center; white-space:nowrap; padding-left: 10px; padding-right: 10px;}
-.main-tab.active{background:var(--green);color:#0D1421}
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
 
-/* CARD */
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden; margin-bottom:20px;}
-.card-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
-.card-body{padding:16px}
+        select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            appearance: none;
+        }
+        
+        select:focus {
+            border-color: var(--accent-blue);
+        }
 
-/* ASSETS LIST */
-.cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.cat-btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;cursor:pointer; transition:all .15s;}
-.cat-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.3);
+        }
 
-.assets-list{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow-y:auto;padding-right:4px}
-.asset-row{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:all .15s;position:relative}
-.asset-row.locked {opacity: 0.5; filter: grayscale(100%); cursor: not-allowed;}
-.asset-row:hover:not(.locked){background:rgba(255,255,255,0.03);border-color:var(--border)}
-.asset-row.selected{background:var(--green-dim);border-color:rgba(0,230,118,0.3)}
-.asset-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px; border:1px solid var(--border)}
-.asset-name{flex:1}
-.asset-name-main{font-size:13px;font-weight:600; display:flex; align-items:center; gap:6px;}
-.lock-icon {font-size:10px;}
-.asset-name-sub{font-size:10px;color:var(--muted2);margin-top:2px}
-.asset-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;}
-.asset-row.selected .asset-check{background:var(--green);border-color:var(--green);color:#0D1421}
+        .btn:active {
+            transform: scale(0.98);
+        }
 
-/* TIME SELECTOR */
-.time-select{display:flex;gap:6px;margin-bottom:16px}
-.time-btn{flex:1;padding:10px 0;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--mono); text-align:center;}
-.time-btn.locked {opacity: 0.4; cursor: not-allowed; position: relative;}
-.time-btn:hover:not(.locked){border-color:var(--green);color:var(--green)}
-.time-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+        .btn:disabled {
+            background: var(--border-color);
+            color: var(--text-muted);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
 
-/* TURBO TOGGLE */
-.turbo-wrapper {display:flex; align-items:center; justify-content:space-between; padding:12px 14px; background:var(--card2); border:1px solid var(--border); border-radius:10px; margin-bottom:16px; cursor:pointer;}
-.turbo-info {display:flex; flex-direction:column; gap:2px;}
-.turbo-title {font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px;}
-.turbo-sub {font-size:10px; color:var(--muted2);}
-.switch {width:36px; height:20px; background:var(--soft); border-radius:10px; position:relative; transition:0.3s;}
-.switch::after {content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; background:#fff; border-radius:50%; transition:0.3s;}
-.turbo-wrapper.on .switch {background:var(--blue);}
-.turbo-wrapper.on .switch::after {left:18px;}
+        /* =========================================
+           КАРТОЧКА РЕЗУЛЬТАТА И АНИМАЦИИ
+        ========================================= */
+        .result-card {
+            background: rgba(41, 98, 255, 0.1);
+            border: 1px solid rgba(41, 98, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
 
-/* ANALYZE BTN & COOLDOWN */
-.analyze-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--green),var(--green2));border:none;border-radius:10px;font-size:15px;font-weight:800;color:#0D1421;cursor:pointer;transition:all .2s;text-transform:uppercase; letter-spacing:0.5px;}
-.analyze-btn:disabled{opacity:.5;cursor:not-allowed; background:var(--soft); color:var(--muted);}
-.cooldown-panel {display:none; text-align:center; padding:16px; background:rgba(255,61,90,0.05); border:1px solid rgba(255,61,90,0.2); border-radius:10px; margin-top:10px;}
-.cd-title {color:var(--red); font-weight:700; font-size:13px; margin-bottom:6px;}
-.cd-timer {font-family:var(--mono); font-size:20px; font-weight:800; color:var(--text); margin-bottom:8px;}
-.cd-sub {font-size:11px; color:var(--muted); line-height:1.4;}
+        .result-card.active {
+            display: block;
+        }
 
-/* LOADER */
-.loader-bar{height:3px;background:var(--border);border-radius:2px;margin-top:12px;overflow:hidden;display:none}
-.loader-bar.show{display:block}
-.loader-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));width:0%;transition:width .1s;}
-.loader-text{text-align:center;font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:1px;margin-top:8px;display:none}
-.loader-text.show{display:block}
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-/* RESULT PANEL */
-.result-panel{margin-top:16px}
-.result-empty{text-align:center;padding:30px 16px;color:var(--muted2)}
-.result-empty p{font-size:12px; margin-top:8px;}
+        .direction-up { color: var(--accent-green); font-size: 28px; font-weight: bold; text-shadow: 0 0 10px rgba(0, 200, 83, 0.4); }
+        .direction-down { color: var(--accent-red); font-size: 28px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 61, 0, 0.4); }
+        .confidence-val { font-size: 24px; color: white; font-weight: bold; }
 
-/* SIGNAL CARD */
-.signal-card{border-radius:14px;padding:20px;border:1px solid; animation: fadeIn .4s ease;}
-.signal-card.up{background:linear-gradient(135deg,rgba(0,230,118,0.07),rgba(0,230,118,0.03));border-color:rgba(0,230,118,0.25)}
-.signal-card.dn{background:linear-gradient(135deg,rgba(255,61,90,0.07),rgba(255,61,90,0.03));border-color:rgba(255,61,90,0.25)}
-.signal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.signal-arrow{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.signal-arrow.up{background:rgba(0,230,118,0.15)}
-.signal-arrow.dn{background:rgba(255,61,90,0.15)}
-.signal-dir{font-size:20px;font-weight:900;font-family:var(--mono)}
-.signal-dir.up{color:var(--green)}.signal-dir.dn{color:var(--red)}
-.signal-asset{font-size:11px;color:var(--muted);margin-top:2px}
-.signal-pct{font-size:28px;font-weight:900;font-family:var(--mono)}
-.signal-pct.up{color:var(--green)}.signal-pct.dn{color:var(--red)}
+        .ai-progress {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            height: 80px;
+        }
+        
+        .ai-progress.active {
+            display: flex;
+        }
 
-.pct-bar{height:5px;background:var(--border);border-radius:3px;margin-bottom:16px;overflow:hidden}
-.pct-fill{height:100%;border-radius:3px;transition:width 1.2s ease}
-.pct-fill.up{background:linear-gradient(90deg,var(--green2),var(--green))}
-.pct-fill.dn{background:linear-gradient(90deg,#C62828,var(--red))}
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
 
-.signal-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.meta-box{background:rgba(0,0,0,0.25);border-radius:8px;padding:8px}
-.meta-label{font-size:9px;color:var(--muted2);text-transform:uppercase;margin-bottom:3px}
-.meta-val{font-size:12px;font-weight:700;font-family:var(--mono)}
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
 
-/* BLURRED WHY SECTION */
-.why-wrapper {position: relative; margin-top: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 10px; border: 1px solid var(--border); overflow:hidden;}
-.why-label {font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-.why-text-content {font-size:12px; color:var(--text); line-height: 1.5; font-weight: 300;}
-.why-blur .why-text-content {filter: blur(4px); user-select: none; opacity: 0.5;}
-.why-lock {position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; text-align: center; background: rgba(13,20,33,0.4);}
-.why-lock span {font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8);}
-.why-lock-btn {margin-top: 6px; font-size: 10px; background: var(--green); color: #000; padding: 4px 10px; border-radius: 6px; font-weight: bold;}
+        /* =========================================
+           ШКАЛА ЭНЕРГИИ
+        ========================================= */
+        .energy-bar-container {
+            margin-top: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+        }
 
-/* CALCULATOR */
-.calc-fields{display:flex;flex-direction:column;gap:16px}
-.field-group label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;font-weight:600}
-.field-row{display:flex;align-items:center;gap:12px}
-.field-val{font-size:16px;font-weight:800;color:var(--green);font-family:var(--mono);min-width:60px;text-align:right}
-input[type=range]{flex:1;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--border);outline:none;}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--green);}
+        .energy-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+        }
 
-.calc-res-wrapper {position:relative; margin-top:20px;}
-.calc-results{display:grid;grid-template-columns:1fr 1fr;gap:10px; transition:0.3s;}
-.calc-res-card{background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:10px;padding:12px}
-.calc-res-card.main{background:var(--green-dim);border-color:rgba(0,230,118,0.3);grid-column:span 2}
-.calc-res-label{font-size:10px;color:var(--muted2);margin-bottom:4px}
-.calc-res-val{font-size:18px;font-weight:800;font-family:var(--mono)}
+        .energy-track {
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
 
-/* BLUR OVERLAY */
-.calc-results.blurred {filter: blur(6px); pointer-events:none;}
-.lock-overlay {position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(13,20,33,0.6); z-index:10; border-radius:12px; text-align:center; padding:20px;}
-.lock-overlay-icon {font-size:32px; margin-bottom:10px;}
-.lock-overlay-text {font-size:13px; font-weight:700; color:#fff;}
-.lock-overlay-sub {font-size:11px; color:var(--muted); margin-top:6px; max-width:80%;}
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c853, #b2ff59);
+            border-radius: 4px;
+            width: 100%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px rgba(0,200,83,0.5);
+        }
 
-/* TOASTS */
-.toast-container {position:fixed; bottom:20px; left:50%; transform:translateX(-50%); width:90%; max-width:400px; z-index:1000; pointer-events:none; display:flex; flex-direction:column; gap:8px;}
-.profit-toast {background:rgba(26,38,64,0.95); backdrop-filter:blur(10px); border:1px solid rgba(0,230,118,0.3); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px; box-shadow:0 8px 20px rgba(0,0,0,0.4); animation: toastEnter 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards, toastLeave 0.5s ease 4s forwards;}
-.toast-icon {font-size:18px;}
-.toast-content {flex:1;}
-.toast-title {font-size:11px; color:var(--muted); margin-bottom:2px;}
-.toast-title span {color:var(--amber); font-weight:700;}
-.toast-sum {font-size:14px; font-weight:800; font-family:var(--mono); color:var(--green);}
+        /* =========================================
+           ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ
+        ========================================= */
+        .lang-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: flex-end;
+        }
+        
+        .lang-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .lang-btn.active {
+            background: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
 
-/* TIERS & INFO */
-.info-section {display: none;}
-.info-title {font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 12px; display:flex; align-items:center; gap:8px;}
-.hiw-block {background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 20px;}
-.hiw-list {list-style: none;}
-.hiw-list li {display: flex; gap: 10px; font-size: 13px; color: var(--text); margin-bottom: 12px; line-height: 1.4;}
-.hiw-list li:last-child {margin-bottom: 0;}
-.hiw-list li::before {content: '✔️'; color: var(--green); font-size: 14px;}
+        /* =========================================
+           КАЛЬКУЛЯТОР ДОХОДНОСТИ
+        ========================================= */
+        .calculator-container {
+            margin-top: 20px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            position: relative;
+        }
+        
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .calc-input {
+            width: 100px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: right;
+            outline: none;
+        }
 
-.tiers-container {display: flex; flex-direction: column; gap: 12px;}
-.tier-box {background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; position: relative; overflow: hidden;}
-.tier-box.demo {border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);}
-.tier-box.start {border-color: rgba(255,255,255,0.15);}
-.tier-box.pro {border-color: rgba(0,207,255,0.3); background: linear-gradient(135deg, var(--card2), rgba(0,207,255,0.05));}
-.tier-box.vip {border-color: rgba(255,215,0,0.4); background: linear-gradient(135deg, var(--card2), rgba(255,215,0,0.1));}
-.tier-box-head {display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
-.tier-box-name {font-size: 16px; font-weight: 800; font-family: var(--mono);}
-.tier-box.demo .tier-box-name {color: #aaa;}
-.tier-box.start .tier-box-name {color: #fff;}
-.tier-box.pro .tier-box-name {color: var(--blue);}
-.tier-box.vip .tier-box-name {color: var(--amber);}
-.tier-dep-req {font-size: 11px; color: var(--muted); background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px;}
-.tier-features {list-style: none; margin-top: 12px;}
-.tier-features li {font-size: 12px; color: var(--text); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;}
-.tier-features li::before {content: '•'; color: var(--muted);}
+        .calc-result {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-green);
+        }
 
-/* LEADERBOARD */
-.stats-section {display: none;}
-.lb-row {display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--border);}
-.lb-row:last-child {border-bottom: none;}
-.lb-left {display: flex; align-items: center; gap: 12px;}
-.lb-rank {width: 24px; height: 24px; border-radius: 50%; background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted);}
-.lb-rank.top-1 {background: linear-gradient(135deg, #FFD700, #FDB931); color: #000; box-shadow: 0 0 10px rgba(255,215,0,0.4);}
-.lb-rank.top-2 {background: linear-gradient(135deg, #E0E0E0, #9E9E9E); color: #000;}
-.lb-rank.top-3 {background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff;}
-.lb-name {font-size: 13px; font-weight: 600;}
-.lb-profit {font-size: 14px; font-weight: 800; font-family: var(--mono); color: var(--green);}
-.lb-update-info {text-align: center; font-size: 10px; color: var(--muted); margin-top: 16px; padding-bottom: 10px;}
+        /* =========================================
+           МОДАЛЬНЫЕ ОКНА И ОВЕРЛЕИ
+        ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
 
-@keyframes toastEnter {from{opacity:0; transform:translateY(20px) scale(0.95);} to{opacity:1; transform:translateY(0) scale(1);}}
-@keyframes toastLeave {from{opacity:1; transform:translateY(0) scale(1);} to{opacity:0; transform:translateY(20px) scale(0.95);}}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-</style>
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .lock-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        /* ФИШКА 3: Всплывающие уведомления (Fake Social Proof) */
+        .toast-container { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 20px; 
+            z-index: 1000; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            pointer-events: none; 
+        }
+
+        .toast { 
+            background: rgba(18, 18, 18, 0.95); 
+            color: #fff; 
+            padding: 12px 16px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            animation: slideIn 0.3s forwards, slideOut 0.3s forwards 3.5s; 
+            border-left: 3px solid var(--accent-orange); 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+            border: 1px solid var(--border-color); 
+        }
+
+        @keyframes slideIn { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-120%); opacity: 0; } }
+
+        /* Карточки внутри модального окна апгрейда */
+        .tariff-card { 
+            background: var(--bg-color); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 12px; 
+            margin-bottom: 10px; 
+            text-align: left; 
+            font-size: 14px; 
+            line-height: 1.4; 
+        }
+        .tariff-card.pro { border-color: var(--accent-orange); box-shadow: 0 0 10px rgba(255,138,0,0.1); }
+        .tariff-card.vip { border-color: var(--accent-pink); box-shadow: 0 0 10px rgba(229,46,113,0.1); }
+    </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">
-    <div class="logo-icon">S</div>
-    <div class="logo-text">Signal<span>Pro</span></div>
-  </div>
-  <div class="header-stats">
-    <div class="tier-badge" id="headerTier">DEMO</div>
-    <div class="energy-badge" id="headerEnergy">
-      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg>
-      <span id="energyVal">DEMO</span>
-    </div>
-  </div>
-</header>
-
-<div class="wrap">
-  
-  <div class="motivational-banner">
-    🚀 <b>Твоя жизнь мечты уже здесь!</b> С нами ты выйдешь на новый финансовый уровень — осталось только начать!
-  </div>
-
-  <div class="hero-strip">
-    <div class="hero-left">
-      <h1>Самая мощная нейросеть<br><em>последнего поколения</em></h1>
-      <p>Продвинутый AI-анализ активов для <b>Binarium</b> и <b>Pocket Option</b> в реальном времени.</p>
-      <a href="https://youtu.be/y1FnaHRbsrs" target="_blank" class="yt-btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-        Как торговать по ИИ
-      </a>
-    </div>
-  </div>
-
-  <div class="vip-premium-card" id="vipPromoBlock">
-    <div class="vip-prem-title">💎 ELITE СООБЩЕСТВО: ОТ $5,000</div>
-    <div class="vip-prem-text">
-      <b>Сообщество миллионеров</b> и тех, кто умеет управлять финансами. Закрытый вход, строгий отбор и неограниченные возможности для заработка с европейскими аналитиками.
-    </div>
-    <a href="https://t.me/leomarku" target="_blank" class="vip-prem-btn">ПОДАТЬ ЗАЯВКУ В ELITE</a>
-  </div>
-
-  <div class="main-tabs">
-    <button class="main-tab active" onclick="switchTab('analyzer',this)">Анализатор</button>
-    <button class="main-tab" onclick="switchTab('stats',this)">Топ-10</button>
-    <button class="main-tab" onclick="switchTab('info',this)">О Системе</button>
-    <button class="main-tab" onclick="switchTab('referral',this)">Рефералы</button>
-    <button class="main-tab" onclick="switchTab('calc',this)">Доход</button>
-  </div>
-
-  <div id="tab-analyzer">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Выберите актив</span>
-      </div>
-      <div class="card-body">
-        <div class="cat-filter" id="catFilter">
-          <button class="cat-btn active" onclick="setCat('all',this)">Все</button>
-          <button class="cat-btn" onclick="setCat('forex',this)">Валюты</button>
-          <button class="cat-btn" onclick="setCat('otc',this)">OTC</button>
-          <button class="cat-btn" onclick="setCat('crypto',this)">Крипто</button>
-          <button class="cat-btn" onclick="setCat('commodities',this)">Сырьё</button>
-          <button class="cat-btn" onclick="setCat('stocks',this)">Акции</button>
-        </div>
-        <div class="assets-list" id="assetsList"></div>
-      </div>
+    <div class="lang-selector">
+        <div class="lang-btn active" onclick="setLang('ru')">RU</div>
+        <div class="lang-btn" onclick="setLang('en')">EN</div>
     </div>
 
-    <div class="card" id="chartCard" style="display:none;">
-      <div class="card-header">
-        <span class="card-title">📉 Живой график рынка</span>
-        <span style="font-size:11px;color:var(--green)" id="chartSymbolLbl">...</span>
-      </div>
-      <div class="card-body" style="padding: 0; height: 300px;">
-        <div id="tv_chart_container" style="width: 100%; height: 100%;"></div>
-      </div>
+    <div id="fomo-banner" class="fomo-banner">⚠️ Высокая нагрузка. Осталось <b>3</b> VIP-места на сервере</div>
+
+    <div class="header">
+        <div class="app-title" data-i18n="app_title">AI Торговый Анализатор</div>
+        <div class="status-badge" id="status-badge" onclick="showUpgradeModal()">УРОВЕНЬ: START</div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">Время сделки</span>
-        <span style="font-size:11px;color:var(--green)" id="selTimeLbl">1 мин</span>
-      </div>
-      <div class="card-body">
-        <div class="time-select" id="timeList"></div>
+    <div class="main-content">
+        <div class="tv-widget-container" id="tv-container">
+            </div>
 
-        <div class="turbo-wrapper" id="turboBtn" onclick="toggleTurbo()">
-          <div class="turbo-info">
-            <div class="turbo-title">🚀 Глубокий анализ (Turbo)</div>
-            <div class="turbo-sub">Скрытые пулы ликвидности (Винрейт до 98%)</div>
-          </div>
-          <div class="switch"></div>
+        <div class="controls-container">
+            <div class="input-group">
+                <label data-i18n="select_time">Выберите время экспирации</label>
+                <select id="time-select">
+                    <option value="1" data-i18n="time_1m">1 Минута</option>
+                    <option value="3" data-i18n="time_3m">3 Минуты</option>
+                    <option value="5" data-i18n="time_5m">5 Минут</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label data-i18n="select_asset">Выберите актив</label>
+                <select id="asset-select" onchange="updateChart()">
+                    <option value="EURUSD">EUR/USD (OTC)</option>
+                    <option value="GBPUSD">GBP/USD (OTC)</option>
+                    <option value="USDJPY">USD/JPY (OTC)</option>
+                    <option value="AUDUSD">AUD/USD (OTC)</option>
+                    <option value="BTCUSD">BITCOIN</option>
+                </select>
+            </div>
+
+            <button id="analyze-btn" class="btn" data-i18n="analyze_btn">Получить ИИ Анализ</button>
         </div>
 
-        <button class="analyze-btn" id="azBtn" onclick="runAnalysis()">Анализировать с ИИ</button>
+        <div id="ai-progress" class="ai-progress">
+            <div class="spinner"></div>
+            <div id="hollywood-text" style="margin-top: 12px; font-family: monospace; color: var(--accent-green); font-size: 13px; min-height: 20px; text-align: center;"></div>
+        </div>
+
+        <div id="analysis-result" class="result-card">
+            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px;" data-i18n="result_direction">Направление:</div>
+            <div id="direction-text" class="direction-up">ВВЕРХ ↗</div>
+            <div style="margin-top: 15px; font-size: 14px; color: var(--text-muted); margin-bottom: 5px;" data-i18n="result_confidence">Уверенность ИИ:</div>
+            <div id="confidence-text" class="confidence-val">92%</div>
+        </div>
         
-        <div class="cooldown-panel" id="cooldownPanel">
-          <div class="cd-title">🔋 Энергия исчерпана</div>
-          <div class="cd-timer" id="cdTimer">00:00:00</div>
-          <div class="cd-sub">Кластерам нейросети нужно время на охлаждение. Бесплатный лимит обновится по таймеру.</div>
-        </div>
-
-        <div class="loader-bar" id="loaderBar"><div class="loader-fill" id="loaderFill"></div></div>
-        <div class="loader-text" id="loaderTxt">СКАНИРОВАНИЕ...</div>
-      </div>
+        <button id="trade-btn" class="btn" style="display: none; background: linear-gradient(90deg, #ff8a00, #e52e71); margin-top: 15px; box-shadow: 0 4px 15px rgba(229, 46, 113, 0.4);" data-i18n="trade_btn">⚡️ Открыть платформу брокера</button>
     </div>
 
-    <div class="result-panel" id="resultPanel">
-      <div class="result-empty">
-        <div style="font-size:30px;opacity:0.3;margin-bottom:8px">📡</div>
-        <p>Выберите актив и время сделки,<br>затем нажмите «Анализировать с ИИ»</p>
-      </div>
+    <div class="energy-bar-container">
+        <div class="energy-header">
+            <span data-i18n="energy">Энергия ИИ</span>
+            <span id="energy-text">7/7</span>
+        </div>
+        <div class="energy-track">
+            <div id="energy-fill" class="energy-fill"></div>
+        </div>
     </div>
-  </div>
 
-  <div id="tab-stats" class="stats-section">
-    <div class="card">
-      <div class="card-header">
-        <span class="card-title">🏆 ТОП-10 ТРЕЙДЕРОВ ЗА СЕГОДНЯ</span>
-      </div>
-      <div class="card-body" style="padding: 0;">
-        <div id="leaderboardList"></div>
-        <div class="lb-update-info">Статистика обновляется ежедневно в 00:00</div>
-      </div>
+    <div class="calculator-container">
+        <div style="font-weight: bold; margin-bottom: 15px; font-size: 14px; text-align: center;" data-i18n="calc_title">Калькулятор доходности ИИ</div>
+        <div class="calc-row">
+            <span style="font-size: 14px;" data-i18n="calc_dep">Депозит ($):</span>
+            <input type="number" id="calc-deposit" class="calc-input" value="50" oninput="calculateProfit()">
+        </div>
+        <div class="calc-row">
+            <span style="font-size: 14px;" data-i18n="calc_profit">Ожидаемая прибыль:</span>
+            <span id="calc-result" class="calc-result">+$125</span>
+        </div>
+        
+        <div id="calcLockOverlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(26,29,36,0.8); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; border-radius: 12px; flex-direction: column;">
+            <span style="font-size: 24px; margin-bottom: 5px;">🔒</span>
+            <span style="font-size: 12px; color: var(--accent-orange); font-weight: bold; text-align: center; padding: 0 10px;" data-i18n="calc_lock">Расчет свыше $100 доступен только для PRO</span>
+        </div>
     </div>
-  </div>
 
-  <div id="tab-info" class="info-section">
-    <div class="info-title">🤖 КАК РАБОТАЕТ SIGNAL PRO?</div>
-    <div class="hiw-block">
-      <ul class="hiw-list">
-        <li><b>Самая сильная модель:</b> Наш алгоритм кардинально отличается от обычных скриптов. Он основан на глубоком машинном обучении.</li>
-        <li><b>10 000+ успешных сделок:</b> Нейросеть обучалась исключительно на плюсовых исторических данных крупнейших брокеров.</li>
-        <li><b>50+ индикаторов разом:</b> ИИ за долю секунды анализирует объемы, пулы ликвидности, уровни и RSI. Человеку на это нужны часы.</li>
-        <li><b>Без эмоций:</b> Математика не знает тильта и азарта. Только холодный расчет вероятностей.</li>
-      </ul>
+    <div id="elite-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="lock-icon">🔒</div>
+            <h3 style="margin-bottom: 10px;" data-i18n="elite_title">Синдикат SIGNAL PRO</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;" data-i18n="elite_desc">Доступно только для трейдеров с оборотом от $5000. Вход по заявкам.</p>
+            <button class="btn" onclick="document.getElementById('elite-modal').style.display='none'" data-i18n="close_btn">Закрыть</button>
+        </div>
     </div>
-    <div class="info-title">🚀 УРОВНИ ДОСТУПА И ПЛЮШКИ</div>
-    <div class="tiers-container">
-      <div class="tier-box demo">
-        <div class="tier-box-head">
-          <div class="tier-box-name">⚪ DEMO-РЕЖИМ</div>
-          <div class="tier-dep-req">Без депозита</div>
-        </div>
-        <ul class="tier-features">
-          <li>Просмотр интерфейса и активов</li>
-          <li><b>СИГНАЛЫ ЗАБЛОКИРОВАНЫ</b></li>
-          <li>Для разблокировки внеси $10</li>
-        </ul>
-      </div>
-      <div class="tier-box start">
-        <div class="tier-box-head">
-          <div class="tier-box-name">🟢 START</div>
-          <div class="tier-dep-req">Депозит: $10 - $99</div>
-        </div>
-        <ul class="tier-features">
-          <li>7 сигналов ИИ в сутки (Энергия)</li>
-          <li>Доступны базовые Валютные пары + EUR/USD (OTC)</li>
-          <li>Экспирация сделок 1-2 минуты</li>
-          <li>Базовый алгоритм анализа</li>
-        </ul>
-      </div>
-      <div class="tier-box pro">
-        <div class="tier-box-head">
-          <div class="tier-box-name">🔵 PRO</div>
-          <div class="tier-dep-req">Депозит: $100 - $499</div>
-        </div>
-        <ul class="tier-features">
-          <li><b>20 сигналов</b> в сутки</li>
-          <li><b>Разблокированы:</b> Все OTC активы и Криптовалюта</li>
-          <li><b>Разблокировано:</b> Экспирация до 5 минут</li>
-          <li><b>Повышенный винрейт</b> (подключение доп. серверов)</li>
-          <li><b>Детальная аналитика:</b> Объяснение логики каждого сигнала</li>
-        </ul>
-      </div>
-      <div class="tier-box vip">
-        <div class="tier-box-head">
-          <div class="tier-box-name">👑 VIP / INSIDER</div>
-          <div class="tier-dep-req">Депозит: от $500</div>
-        </div>
-        <ul class="tier-features">
-          <li><b>Безлимитные сигналы (24/7)</b></li>
-          <li><b>Разблокировано ВСЁ:</b> Акции (Facebook, Google, Apple) и Сырье</li>
-          <li><b>TURBO-Режим:</b> Глубокий анализ скрытой ликвидности</li>
-          <li>Доступ в закрытый VIP-клуб (торговля с аналитиками)</li>
-        </ul>
-      </div>
-    </div>
-  </div>
 
-  <div id="tab-referral" style="display:none;">
-    <div class="card">
-      <div class="card-header"><span class="card-title">🎁 Пригласи друга — получи VIP</span></div>
-      <div class="card-body">
-        <div style="text-align:center; font-size:40px; margin-bottom:10px;">🤝</div>
-        <h3 style="text-align:center; color:var(--amber); margin-bottom:12px; font-weight:800; font-size: 18px;">VIP-СТАТУС НА 4 ЧАСА</h3>
-        <p style="font-size:13px; color:var(--text); line-height:1.5; margin-bottom:16px; text-align:center;">
-          Пригласи трейдера по своей ссылке. Как только он внесет <b>любой депозит (даже $10)</b>, твоя система автоматически обновится до максимального уровня VIP (безлимитные сигналы, турбо-режим, все активы) ровно на 4 часа!
-        </p>
-        <div style="background:rgba(0,0,0,0.2); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:16px;">
-          <ol style="padding-left:16px; font-size:12px; color:var(--muted); line-height:1.6;">
-            <li>Нажми кнопку ниже (Бот пришлет ссылку).</li>
-            <li>Отправь её другу или размести в сети.</li>
-            <li>Друг проходит регистрацию и вносит депозит.</li>
-            <li>Ты мгновенно получаешь VIP-доступ 👑</li>
-          </ol>
-        </div>
-        <button onclick="getRefLink()" class="analyze-btn" style="background: linear-gradient(135deg, var(--blue), #007BFF); color:#fff;">Получить ссылку в боте</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-calc" style="display:none;">
-    <div class="card">
-      <div class="card-header"><span class="card-title">Калькулятор</span></div>
-      <div class="card-body">
-        <div class="calc-fields">
-          <div class="field-group">
-            <label>Депозит ($)</label>
-            <div class="field-row">
-              <input type="range" id="cDep" min="10" max="2000" step="10" value="50" oninput="calcUpdate()"/>
-              <div class="field-val" id="cDepV">$50</div>
+    <div id="upgrade-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 15px; text-align: center;" data-i18n="upgrade_title">Тарифы SIGNAL PRO</h3>
+            <div class="tariff-card">
+                <b data-i18n="tariff_start_title">🟢 START</b><br>
+                <span data-i18n="tariff_start_desc" style="color: var(--text-muted);">7 сигналов, базовые сервера</span>
             </div>
-          </div>
-          <div class="field-group">
-            <label>% на сделку</label>
-            <div class="field-row">
-              <input type="range" id="cPct" min="1" max="10" step="1" value="5" oninput="calcUpdate()"/>
-              <div class="field-val" id="cPctV">5%</div>
+            <div class="tariff-card pro">
+                <b data-i18n="tariff_pro_title">👑 PRO (от $100)</b><br>
+                <span data-i18n="tariff_pro_desc" style="color: var(--text-muted);">Безлимит, Turbo-анализ</span>
             </div>
-          </div>
-          <div class="field-group">
-            <label>Сделок в день</label>
-            <div class="field-row">
-              <input type="range" id="cTrades" min="1" max="30" step="1" value="10" oninput="calcUpdate()"/>
-              <div class="field-val" id="cTradesV">10</div>
+            <div class="tariff-card vip">
+                <b data-i18n="tariff_vip_title">💎 VIP (от $500)</b><br>
+                <span data-i18n="tariff_vip_desc" style="color: var(--text-muted);">Защита Мартингейлом, Инсайды</span>
             </div>
-          </div>
+            <button class="btn" style="width: 100%; margin-top: 15px;" onclick="closeUpgradeModal()" data-i18n="close_btn">Понятно</button>
         </div>
-      </div>
     </div>
-    <div class="card">
-      <div class="card-header"><span class="card-title">Доходность</span></div>
-      <div class="card-body">
-        <div class="calc-res-wrapper">
-          <div class="calc-results" id="calcResults"></div>
-          <div class="lock-overlay" id="calcLockOverlay">
-            <div class="lock-overlay-icon">🔒</div>
-            <div class="lock-overlay-text">РАСЧЕТ ЗАБЛОКИРОВАН</div>
-            <div class="lock-overlay-sub">Для расчетов с капиталом >$100 требуется уровень PRO (депозит от $100).</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="toast-container" id="toastContainer"></div>
+    <div id="toast-container" class="toast-container"></div>
 
-<script>
-// =========== INIT & TIER LOGIC ===========
-const urlParams = new URLSearchParams(window.location.search);
-let userTier = urlParams.get('tier') || 'demo'; 
-userTier = userTier.toLowerCase();
-if(!['demo','start','pro','vip'].includes(userTier)) userTier = 'demo';
-
-const TIER_CONFIG = {
-  demo:  { limit: 0, cats: ['forex'], maxTime: 1, name: 'DEMO', color: '#aaa', winBoost: 0 },
-  start: { limit: 7, cats: ['forex'], maxTime: 2, name: 'START', color: '#fff', winBoost: 0 },
-  pro:   { limit: 20, cats: ['forex','otc','crypto'], maxTime: 5, name: 'PRO', color: 'var(--blue)', winBoost: 3 },
-  vip:   { limit: 'inf', cats: ['forex','otc','crypto','commodities','stocks'], maxTime: 5, name: 'VIP', color: 'var(--amber)', winBoost: 6 }
-};
-
-const config = TIER_CONFIG[userTier];
-
-// Energy System LocalStorage
-let currentEnergy = localStorage.getItem('ai_energy_' + userTier);
-let cooldownTime = localStorage.getItem('ai_cooldown_' + userTier);
-
-if (config.limit === 'inf') {
-  currentEnergy = '∞';
-} else if (config.limit === 0) {
-  currentEnergy = 'DEMO';
-} else {
-  if (cooldownTime) {
-    const now = new Date().getTime();
-    if (now > parseInt(cooldownTime)) {
-      currentEnergy = config.limit;
-      localStorage.removeItem('ai_cooldown_' + userTier);
-    }
-  }
-  if (currentEnergy === null) currentEnergy = config.limit;
-  currentEnergy = parseInt(currentEnergy);
-}
-
-function updateEnergyUI() {
-  const badge = document.getElementById('headerEnergy');
-  const val = document.getElementById('energyVal');
-  const btn = document.getElementById('azBtn');
-  const panel = document.getElementById('cooldownPanel');
-
-  if (userTier === 'demo') {
-    val.textContent = 'DEMO';
-    badge.classList.add('empty');
-    btn.style.display = 'block';
-    panel.style.display = 'none';
-    return;
-  }
-
-  if (config.limit === 'inf') {
-    val.textContent = '∞';
-    return;
-  }
-
-  val.textContent = currentEnergy + '/' + config.limit;
-  if (currentEnergy <= 0) {
-    badge.classList.add('empty');
-    btn.style.display = 'none';
-    panel.style.display = 'block';
-    if (!cooldownTime) {
-      cooldownTime = new Date().getTime() + (24 * 60 * 60 * 1000);
-      localStorage.setItem('ai_cooldown_' + userTier, cooldownTime);
-    }
-    startCooldownTimer();
-  } else {
-    badge.classList.remove('empty');
-    btn.style.display = 'block';
-    panel.style.display = 'none';
-  }
-}
-
-let cdInterval;
-function startCooldownTimer() {
-  clearInterval(cdInterval);
-  cdInterval = setInterval(() => {
-    const now = new Date().getTime();
-    const distance = parseInt(cooldownTime) - now;
-    if (distance <= 0) {
-      clearInterval(cdInterval);
-      currentEnergy = config.limit;
-      localStorage.setItem('ai_energy_' + userTier, currentEnergy);
-      localStorage.removeItem('ai_cooldown_' + userTier);
-      cooldownTime = null;
-      updateEnergyUI();
-      return;
-    }
-    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((distance % (1000 * 60)) / 1000);
-    document.getElementById('cdTimer').textContent = 
-      String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-  }, 1000);
-}
-
-document.getElementById('headerTier').textContent = config.name;
-document.getElementById('headerTier').className = 'tier-badge tier-' + userTier;
-updateEnergyUI();
-
-if(window.Telegram?.WebApp) {
-  Telegram.WebApp.ready();
-  Telegram.WebApp.expand();
-}
-
-// =========== ASSETS & TRADINGVIEW ===========
-const ASSETS = [
-  {id:'eurusd',name:'EUR/USD',cat:'forex',icon:'🇪🇺'},
-  {id:'gbpusd',name:'GBP/USD',cat:'forex',icon:'🇬🇧'},
-  {id:'eurusd_otc',name:'EUR/USD (OTC)',cat:'otc',icon:'⚡'},
-  {id:'gbpusd_otc',name:'GBP/USD (OTC)',cat:'otc',icon:'⚡'},
-  {id:'latam',name:'LATAM Index',cat:'otc',icon:'🌎'},
-  {id:'btcusd',name:'BITCOIN',cat:'crypto',icon:'₿'},
-  {id:'ethusd',name:'ETHEREUM',cat:'crypto',icon:'Ξ'},
-  {id:'imx',name:'IMX',cat:'crypto',icon:'🪙'},
-  {id:'gold',name:'Gold',cat:'commodities',icon:'🥇'},
-  {id:'apple',name:'APPLE',cat:'stocks',icon:'🍎'},
-  {id:'facebook',name:'FACEBOOK',cat:'stocks',icon:'📘'},
-  {id:'google',name:'GOOGLE',cat:'stocks',icon:'🔍'}
-];
-
-const TV_SYMBOLS = {
-  'eurusd': 'FX:EURUSD',
-  'gbpusd': 'FX:GBPUSD',
-  'eurusd_otc': 'FX:EURUSD', 
-  'gbpusd_otc': 'FX:GBPUSD',
-  'latam': 'BMFBOVESPA:IBOV',
-  'btcusd': 'BINANCE:BTCUSDT',
-  'ethusd': 'BINANCE:ETHUSDT',
-  'imx': 'BINANCE:IMXUSDT',
-  'gold': 'OANDA:XAUUSD',
-  'apple': 'NASDAQ:AAPL',
-  'facebook': 'NASDAQ:META',
-  'google': 'NASDAQ:GOOGL'
-};
-
-let selAsset = null;
-let selTime = 1;
-let curCat = 'all';
-let isTurbo = false;
-let tvWidget = null;
-
-function loadChart(symbol) {
-  if(!symbol) return;
-  document.getElementById('chartCard').style.display = 'block';
-  document.getElementById('chartSymbolLbl').textContent = selAsset.name;
-  document.getElementById('tv_chart_container').innerHTML = ''; 
-  
-  tvWidget = new TradingView.widget({
-    "autosize": true,
-    "symbol": symbol,
-    "interval": "1",
-    "timezone": "Etc/UTC",
-    "theme": "dark",
-    "style": "1",
-    "locale": "ru",
-    "enable_publishing": false,
-    "backgroundColor": "#1A2640",
-    "gridColor": "#2A3D5C",
-    "hide_top_toolbar": true,
-    "hide_legend": true,
-    "save_image": false,
-    "container_id": "tv_chart_container"
-  });
-}
-
-function renderAssets(){
-  const list = document.getElementById('assetsList');
-  const filtered = curCat==='all' ? ASSETS : ASSETS.filter(a=>a.cat===curCat);
-  
-  list.innerHTML = filtered.map(a=>{
-    // Уникальная логика: EUR/USD (OTC) разблокирован даже на START
-    let isLocked = !config.cats.includes(a.cat);
-    if(userTier === 'start' && a.id === 'eurusd_otc') isLocked = false;
-
-    const sel = selAsset && selAsset.id===a.id ? ' selected' : '';
-    const lockHtml = isLocked ? `<span class="lock-icon">🔒</span>` : '';
-    const onClick = isLocked ? `onclick="showLockAlert('asset')"` : `onclick="selectAsset('${a.id}')"`;
-    
-    return `
-    <div class="asset-row ${isLocked ? 'locked' : ''} ${sel}" ${onClick}>
-      <div class="asset-icon" style="background:rgba(255,255,255,0.04)">${a.icon}</div>
-      <div class="asset-name">
-        <div class="asset-name-main">${a.name} ${lockHtml}</div>
-        <div class="asset-name-sub">${a.cat.toUpperCase()}</div>
-      </div>
-      <div class="asset-check">${sel?'✓':''}</div>
-    </div>`;
-  }).join('');
-}
-
-function selectAsset(id){
-  selAsset = ASSETS.find(a=>a.id===id);
-  renderAssets();
-  loadChart(TV_SYMBOLS[id]);
-}
-
-function setCat(cat,btn){
-  curCat=cat;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderAssets();
-}
-
-function renderTime(){
-  const list = document.getElementById('timeList');
-  let html = '';
-  for(let i=1; i<=5; i++){
-    const locked = i > config.maxTime;
-    const act = i === selTime ? 'active' : '';
-    const lck = locked ? 'locked' : '';
-    const clk = locked ? `onclick="showLockAlert('time')"` : `onclick="setTime(${i})"`;
-    const txt = locked ? `🔒 ${i}м` : `${i} мин`;
-    html += `<button class="time-btn ${act} ${lck}" ${clk}>${txt}</button>`;
-  }
-  list.innerHTML = html;
-}
-
-function setTime(t){
-  selTime = t;
-  document.getElementById('selTimeLbl').textContent = t + ' мин';
-  renderTime();
-}
-
-function showLockAlert(type) {
-  if (userTier === 'demo') {
-      if(window.Telegram?.WebApp) {
-        Telegram.WebApp.showAlert('🔒 В демо-режиме активы и время заблокированы. Внесите $10 для разблокировки.');
-      } else {
-        alert('🔒 В демо-режиме активы и время заблокированы. Внесите $10 для разблокировки.');
-      }
-      return;
-  }
-  if (!window.Telegram?.WebApp) {
-    alert("Повысьте уровень депозита для разблокировки функции.");
-    return;
-  }
-  if (type === 'asset') {
-    Telegram.WebApp.showAlert(`Требуется статус PRO (от $100) для доступа к OTC и Крипте, или VIP (от $500) для Акций и Сырья.`);
-  } else if (type === 'time') {
-    Telegram.WebApp.showAlert(`Длительная экспирация доступна на статусе PRO (от $100).`);
-  } else if (type === 'turbo') {
-    Telegram.WebApp.showAlert(`Глубокий анализ (Turbo) доступен только для участников VIP-клуба (депозит от $500).`);
-  }
-}
-
-function toggleTurbo() {
-  if (userTier !== 'vip') {
-    showLockAlert('turbo');
-    return;
-  }
-  isTurbo = !isTurbo;
-  const btn = document.getElementById('turboBtn');
-  if(isTurbo) btn.classList.add('on');
-  else btn.classList.remove('on');
-}
-
-function getRefLink() {
-  if(window.Telegram?.WebApp) {
-    Telegram.WebApp.close(); 
-  } else {
-    alert("Кнопка работает только в Telegram. Откройте меню бота для получения ссылки.");
-  }
-}
-
-// =========== ANALYSIS ===========
-const STRATEGIES = {
-  up: [
-    {n: 'Алгоритм перепроданности', d: 'Мульти-таймфрейм анализ RSI и объемов указывает на экстремальную перепроданность актива. Нейросеть фиксирует формирование пула покупателей. Ожидается импульсный рост цены.'},
-    {n: 'Пробой ИИ-уровня', d: 'Зафиксирован мощный пробой алгоритмического сопротивления. Давление продавцов истощено, скользящие средние ИИ разворачиваются вверх.'}
-  ],
-  dn: [
-    {n: 'Нейросетевой паттерн Y-2', d: 'Алгоритм выявил критическую перекупленность. Фиксируется резкий отток ликвидности и формирование каскадного закрытия лонгов. Ожидается резкое снижение.'},
-    {n: 'Медвежья дивергенция', d: 'Подтверждена скрытая дивергенция по 50+ индикаторам. Покупательская способность на нуле, нейросеть предсказывает медвежий импульс.'}
-  ]
-};
-
-function runAnalysis(){
-  if (userTier === 'demo') {
-    const msg = "🔒 ДЕМО-РЕЖИМ. Нейросеть готова к работе! Внеси депозит всего от $10, чтобы получить полный доступ и разблокировать live-сигналы.";
-    if(window.Telegram?.WebApp) Telegram.WebApp.showAlert(msg);
-    else alert(msg);
-    return;
-  }
-
-  if(!selAsset){
-    window.Telegram?.WebApp ? Telegram.WebApp.showAlert('Выберите актив!') : alert('Выберите актив');
-    return;
-  }
-
-  if (config.limit !== 'inf') {
-    currentEnergy--;
-    localStorage.setItem('ai_energy_' + userTier, currentEnergy);
-    updateEnergyUI();
-  }
-
-  const btn = document.getElementById('azBtn');
-  const bar = document.getElementById('loaderBar');
-  const fill = document.getElementById('loaderFill');
-  const txt = document.getElementById('loaderTxt');
-  const panel = document.getElementById('resultPanel');
-
-  btn.disabled=true;
-  bar.classList.add('show'); txt.classList.add('show');
-  panel.innerHTML='';
-
-  let prog=0;
-  const iv = setInterval(()=>{
-    prog += Math.random()*15+5;
-    if(prog>95) prog=95;
-    fill.style.width = prog+'%';
-  },100);
-
-  setTimeout(()=>{
-    clearInterval(iv);
-    fill.style.width='100%';
-    setTimeout(()=>{
-      bar.classList.remove('show'); txt.classList.remove('show');
-      fill.style.width='0%';
-      showResult();
-      
-      // Блок на 1 минуту между сигналами
-      if (currentEnergy > 0 || config.limit === 'inf') {
-        let tLeft = 60;
-        btn.disabled = true;
-        btn.style.background = 'var(--soft)';
-        btn.style.color = 'var(--muted)';
-        btn.innerHTML = `ПЕРЕКАЛИБРОВКА... ${tLeft}С`;
-        let cdI = setInterval(()=>{
-            tLeft--;
-            if(tLeft<=0){
-                clearInterval(cdI);
-                btn.disabled = false;
-                btn.style.background = '';
-                btn.style.color = '';
-                btn.innerHTML = 'АНАЛИЗИРОВАТЬ С ИИ';
-            } else {
-                btn.innerHTML = `ПЕРЕКАЛИБРОВКА... ${tLeft}С`;
+    <script>
+        // =========================================
+        // СЛОВАРЬ ПЕРЕВОДОВ (С добавлением новых фишек)
+        // =========================================
+        const translations = {
+            ru: {
+                app_title: "AI Торговый Анализатор",
+                energy: "Энергия ИИ",
+                select_time: "Выберите время экспирации",
+                time_1m: "1 Минута",
+                time_3m: "3 Минуты",
+                time_5m: "5 Минут",
+                select_asset: "Выберите актив",
+                analyze_btn: "Получить ИИ Анализ",
+                result_wait: "Анализ рынка...",
+                result_direction: "Направление:",
+                result_confidence: "Уверенность:",
+                calc_title: "Калькулятор доходности ИИ",
+                calc_dep: "Депозит ($):",
+                calc_profit: "Ожидаемая прибыль:",
+                calc_lock: "Расчет сумм свыше $100 доступен только от уровня PRO",
+                elite_title: "Синдикат SIGNAL PRO",
+                elite_desc: "Доступно только для трейдеров с оборотом от $5000. Вход строго по заявкам через саппорт.",
+                close_btn: "Закрыть",
+                upgrade_title: "Тарифы SIGNAL PRO",
+                tariff_start_title: "🟢 START",
+                tariff_start_desc: "7 сигналов, базовые сервера",
+                tariff_pro_title: "👑 PRO (от $100)",
+                tariff_pro_desc: "Безлимит, Turbo-анализ",
+                tariff_vip_title: "💎 VIP (от $500)",
+                tariff_vip_desc: "Защита Мартингейлом, Инсайды",
+                fomo_banner: "⚠️ Высокая нагрузка. Осталось <b>{slots}</b> VIP-места на сервере",
+                h_step1: "Подключение к серверам брокера...",
+                h_step2: "Анализ стакана заявок...",
+                h_step3: "Сканирование скрытых объемов...",
+                h_step4: "Калибровка точки входа...",
+                trade_btn: "⚡️ Открыть платформу брокера"
+            },
+            en: {
+                app_title: "AI Trading Analyzer",
+                energy: "AI Energy",
+                select_time: "Select Expiration Time",
+                time_1m: "1 Minute",
+                time_3m: "3 Minutes",
+                time_5m: "5 Minutes",
+                select_asset: "Select Asset",
+                analyze_btn: "Get AI Analysis",
+                result_wait: "Analyzing market...",
+                result_direction: "Direction:",
+                result_confidence: "Confidence:",
+                calc_title: "AI Profitability Calculator",
+                calc_dep: "Deposit ($):",
+                calc_profit: "Expected Profit:",
+                calc_lock: "Calculations above $100 available for PRO level only",
+                elite_title: "SIGNAL PRO Syndicate",
+                elite_desc: "Available only for traders with $5000+ volume. Entry by support application only.",
+                close_btn: "Close",
+                upgrade_title: "SIGNAL PRO Tariffs",
+                tariff_start_title: "🟢 START",
+                tariff_start_desc: "7 signals, basic servers",
+                tariff_pro_title: "👑 PRO (from $100)",
+                tariff_pro_desc: "Unlimited, Turbo-analysis",
+                tariff_vip_title: "💎 VIP (from $500)",
+                tariff_vip_desc: "Martingale protection, Insiders",
+                fomo_banner: "⚠️ High load. <b>{slots}</b> VIP slots left on the server",
+                h_step1: "Connecting to broker servers...",
+                h_step2: "Analyzing order book...",
+                h_step3: "Scanning hidden volumes...",
+                h_step4: "Calibrating entry point...",
+                trade_btn: "⚡️ Open Broker Platform"
             }
-        }, 1000);
-      }
+        };
 
-    },300);
-  }, 1500);
-}
+        let currentLang = 'ru';
 
-function showResult(){
-  // --- НАЧАЛО: ОТПРАВКА СТАТИСТИКИ В БОТА ---
-  if(window.Telegram?.WebApp?.initDataUnsafe?.user) {
-    fetch(`http://132.243.213.180:8080/postback/deal?user_id=${Telegram.WebApp.initDataUnsafe.user.id}`)
-      .catch(e => console.log('Deal track error'));}
-  // --- КОНЕЦ: ОТПРАВКА СТАТИСТИКИ В БОТА ---
+        // =========================================
+        // ИНИЦИАЛИЗАЦИЯ TELEGRAM WEB APP
+        // =========================================
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.expand();
+            window.Telegram.WebApp.ready();
+        }
 
-  const isUp = Math.random() < 0.5;
-  const dir = isUp ? 'up' : 'dn';
-  const stratList = isUp ? STRATEGIES.up : STRATEGIES.dn;
-  const strat = stratList[Math.floor(Math.random()*stratList.length)];
-  
-  // Уверенность нейросети с десятыми долями (пункт 1)
-  let baseSucc = 75 + Math.floor(Math.random()*10);
-  baseSucc += config.winBoost;
-  if (isTurbo) baseSucc += 8;
-  
-  let decimal = (Math.random() * 9).toFixed(1).split('.')[1];
-  let finalSucc = baseSucc >= 98 ? '98.0' : baseSucc + '.' + decimal;
-  
-  // Для ширины бара достаточно целого числа
-  let barWidth = baseSucc >= 98 ? 98 : baseSucc;
+        // Парсинг уровня юзера из URL (например, ?tier=pro&lang=en)
+        const urlParams = new URLSearchParams(window.location.search);
+        const userTier = urlParams.get('tier') || 'start'; // start, pro, vip
+        const urlLang = urlParams.get('lang');
+        
+        if(urlLang === 'en') {
+            currentLang = 'en';
+            document.querySelectorAll('.lang-btn')[0].classList.remove('active');
+            document.querySelectorAll('.lang-btn')[1].classList.add('active');
+        }
 
-  const arrow = isUp?'↑':'↓';
-  const label = isUp?'ВВЕРХ (CALL)':'ВНИЗ (PUT)';
+        // =========================================
+        // ЛОГИКА ЭНЕРГИИ ПО ТАРИФАМ
+        // =========================================
+        let maxEnergy = 7;
+        if (userTier === 'pro') maxEnergy = 20;
+        if (userTier === 'vip') maxEnergy = 999;
+        
+        let energy = maxEnergy;
 
-  const isBlurred = userTier === 'start' || userTier === 'demo';
-  const whyHtml = `
-    <div class="why-wrapper ${isBlurred ? 'why-blur' : ''}">
-      <div class="why-label">🧠 Анализ нейросети · ${strat.n}</div>
-      <div class="why-text-content">${strat.d}</div>
-      ${isBlurred ? `
-      <div class="why-lock">
-        <span>🔒 АНАЛИТИКА СКРЫТА</span>
-        <div class="why-lock-btn">ДОСТУПНО С УРОВНЯ PRO</div>
-      </div>
-      ` : ''}
-    </div>
-  `;
+        // =========================================
+        // ЛОГИКА ПЕРЕВОДОВ И ИНТЕРФЕЙСА
+        // =========================================
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.innerHTML = translations[currentLang][key]; // Изменил на innerHTML для поддержки тега <b> в FOMO
+                }
+            });
+            updateEnergyUI();
+            updateFomoBanner();
+        }
 
-  document.getElementById('resultPanel').innerHTML = `
-    <div class="signal-card ${dir}">
-      <div class="signal-top">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="signal-arrow ${dir}">${arrow}</div>
-          <div>
-            <div class="signal-dir ${dir}">${label}</div>
-            <div class="signal-asset">${selAsset.name} · ${selTime} мин</div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div class="signal-pct ${dir}">${finalSucc}%</div>
-          <div style="font-size:9px;color:var(--muted);text-transform:uppercase">Точность ИИ</div>
-        </div>
-      </div>
-      <div class="pct-bar"><div class="pct-fill ${dir}" style="width:${barWidth}%"></div></div>
-      <div class="signal-meta">
-        <div class="meta-box"><div class="meta-label">Сила</div><div class="meta-val">${baseSucc>=85?'Высокая':'Умеренная'}</div></div>
-        <div class="meta-box"><div class="meta-label">Тренд</div><div class="meta-val">${isUp?'Бычий':'Медвежий'}</div></div>
-        <div class="meta-box"><div class="meta-label">Режим</div><div class="meta-val" style="color:var(--amber)">${isTurbo?'TURBO':'Base'}</div></div>
-      </div>
-      ${whyHtml}
-    </div>
-  `;
-}
+        window.setLang = function(lang) {
+            currentLang = lang;
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updateLanguage();
+        };
 
-// =========== CALCULATOR ===========
-function calcUpdate(){
-  const dep = +document.getElementById('cDep').value;
-  const pct = +document.getElementById('cPct').value/100;
-  const trades = +document.getElementById('cTrades').value;
-  
-  document.getElementById('cDepV').textContent = '$'+dep;
-  document.getElementById('cPctV').textContent = (pct*100)+'%';
-  document.getElementById('cTradesV').textContent = trades;
+        // =========================================
+        // ВНЕДРЕНИЕ 2: ДИНАМИЧЕСКИЙ FOMO
+        // =========================================
+        function updateFomoBanner() {
+            const slots = Math.floor(Math.random() * 4) + 1; // Рандом от 1 до 4
+            const textTemplate = translations[currentLang].fomo_banner;
+            document.getElementById('fomo-banner').innerHTML = textTemplate.replace('{slots}', slots);
+        }
+        // Обновляем количество слотов каждые 15 секунд
+        setInterval(updateFomoBanner, 15000);
 
-  const lock = document.getElementById('calcLockOverlay');
-  const resBox = document.getElementById('calcResults');
-  
-  if((userTier === 'start' || userTier === 'demo') && dep > 100) {
-    resBox.classList.add('blurred');
-    lock.style.display = 'flex';
-  } else {
-    resBox.classList.remove('blurred');
-    lock.style.display = 'none';
-  }
+        // =========================================
+        // ВНЕДРЕНИЕ 3: FAKE SOCIAL PROOF (УВЕДОМЛЕНИЯ)
+        // =========================================
+        const fakeEventsRU = [
+            "✅ @alex_*** вывел $145", "🔥 @mike99 активировал уровень PRO", 
+            "⚡️ ИИ закрыл сделку по EUR/USD в +", "💎 @crypto_*** пополнил баланс на $500", 
+            "✅ @invest*** вывел $320", "🚀 @trader*** перешел на уровень VIP"
+        ];
+        const fakeEventsEN = [
+            "✅ @alex_*** withdrew $145", "🔥 @mike99 activated PRO level", 
+            "⚡️ AI closed EUR/USD trade in +", "💎 @crypto_*** deposited $500", 
+            "✅ @invest*** withdrew $320", "🚀 @trader*** upgraded to VIP"
+        ];
+        
+        setInterval(() => {
+            if(Math.random() > 0.4) { // Вероятность 60%, чтобы не спамило каждую секунду
+                const events = currentLang === 'ru' ? fakeEventsRU : fakeEventsEN;
+                const eventText = events[Math.floor(Math.random() * events.length)];
+                
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                // Чередуем цвета рамки для эффекта (Оранжевый или Зеленый)
+                toast.style.borderLeftColor = Math.random() > 0.5 ? 'var(--accent-orange)' : 'var(--accent-green)';
+                toast.innerText = eventText;
+                
+                document.getElementById('toast-container').appendChild(toast);
+                
+                // Удаляем элемент из DOM через 4 секунды
+                setTimeout(() => { 
+                    if(toast.parentNode) toast.parentNode.removeChild(toast); 
+                }, 4000);
+            }
+        }, 12000); // Проверка каждые 12 секунд
 
-  const win = 0.82;
-  const pay = 0.82;
-  const stake = dep*pct;
-  const dayProfit = (trades*win * stake*pay) - (trades*(1-win) * stake);
-  
-  const fmt = v => (v>=0?'+':'−') + '$' + Math.abs(Math.round(v));
+        // =========================================
+        // ВНЕДРЕНИЕ 1: ОКНО ТАРИФОВ
+        // =========================================
+        window.showUpgradeModal = function() {
+            document.getElementById('upgrade-modal').style.display = 'flex';
+        };
+        window.closeUpgradeModal = function() {
+            document.getElementById('upgrade-modal').style.display = 'none';
+        };
 
-  resBox.innerHTML = `
-    <div class="calc-res-card"><div class="calc-res-label">Сумма сделки</div><div class="calc-res-val">$${Math.round(stake)}</div></div>
-    <div class="calc-res-card"><div class="calc-res-label">Прибыль в день</div><div class="calc-res-val" style="color:var(--green)">${fmt(dayProfit)}</div></div>
-    <div class="calc-res-card main"><div class="calc-res-label">Итого за месяц (22 дня)</div><div class="calc-res-val" style="color:var(--green)">$${Math.round(dep + dayProfit*22).toLocaleString('ru')}</div></div>
-  `;
-}
+        // Логика установки бейджа в шапке
+        const badge = document.getElementById('status-badge');
+        if (userTier === 'start') {
+            badge.innerText = 'УРОВЕНЬ: START';
+            badge.style.background = 'linear-gradient(90deg, #ff8a00, #e52e71)';
+        } else if (userTier === 'pro') {
+            badge.innerText = 'УРОВЕНЬ: PRO 👑';
+            badge.style.background = 'linear-gradient(90deg, #2962ff, #00c853)';
+        } else if (userTier === 'vip') {
+            badge.innerText = 'УРОВЕНЬ: VIP 💎';
+            badge.style.background = 'linear-gradient(90deg, #d500f9, #651fff)';
+        }
 
-// =========== TOASTS ===========
-const names = ['ID...942','ID...112','ID...884','ID...032','ID...544'];
-const toastAssets = ['Золоте','BTC','EUR/USD','APPLE','Нефти'];
+        // =========================================
+        // ИНИЦИАЛИЗАЦИЯ TRADINGVIEW
+        // =========================================
+        let tvWidget;
+        function createWidget(symbol) {
+            document.getElementById('tv-container').innerHTML = '';
+            tvWidget = new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": symbol,
+                "interval": "1",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": currentLang,
+                "enable_publishing": false,
+                "backgroundColor": "#1a1d24",
+                "gridColor": "#2b3040",
+                "hide_top_toolbar": true,
+                "hide_legend": true,
+                "save_image": false,
+                "container_id": "tv-container"
+            });
+        }
 
-function spawnToast() {
-  if(userTier === 'vip') return; 
-  
-  const container = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'profit-toast';
-  
-  const name = names[Math.floor(Math.random()*names.length)];
-  const asset = toastAssets[Math.floor(Math.random()*toastAssets.length)];
-  const sum = Math.floor(Math.random()*450 + 150);
+        // Динамическая загрузка скрипта TV
+        const script = document.createElement('script');
+        script.src = "https://s3.tradingview.com/tv.js";
+        script.async = true;
+        script.onload = () => { createWidget("FX:EURUSD"); };
+        document.head.appendChild(script);
 
-  t.innerHTML = `
-    <div class="toast-icon">👑</div>
-    <div class="toast-content">
-      <div class="toast-title"><span>VIP</span> пользователь ${name}</div>
-      <div style="font-size:12px; color:var(--text)">Только что закрыл плюс на ${asset}</div>
-    </div>
-    <div class="toast-sum">+$${sum}</div>
-  `;
-  container.appendChild(t);
-  
-  setTimeout(() => {
-    if(container.contains(t)) container.removeChild(t);
-  }, 4500);
-}
+        window.updateChart = function() {
+            const asset = document.getElementById('asset-select').value;
+            let symbol = "FX:EURUSD";
+            if(asset === "GBPUSD") symbol = "FX:GBPUSD";
+            if(asset === "USDJPY") symbol = "FX:USDJPY";
+            if(asset === "AUDUSD") symbol = "FX:AUDUSD";
+            if(asset === "BTCUSD") symbol = "BINANCE:BTCUSDT";
+            createWidget(symbol);
+        }
 
-setInterval(() => {
-  if (Math.random() > 0.3) spawnToast();
-}, 10000);
+        function updateEnergyUI() {
+            const track = document.getElementById('energy-fill');
+            const text = document.getElementById('energy-text');
+            
+            if (userTier === 'vip') {
+                text.innerText = "∞";
+                track.style.width = '100%';
+                track.style.background = 'linear-gradient(90deg, #d500f9, #651fff)';
+            } else {
+                text.innerText = `${energy}/${maxEnergy}`;
+                const percentage = (energy / maxEnergy) * 100;
+                track.style.width = `${percentage}%`;
+                
+                if (percentage < 30) {
+                    track.style.background = 'linear-gradient(90deg, #ff3d00, #ff8a00)';
+                } else {
+                    track.style.background = 'linear-gradient(90deg, #00c853, #b2ff59)';
+                }
+            }
+        }
 
-// =========== LEADERBOARD ===========
-const RU_NAMES = [
-  "Александр С.", "Дмитрий В.", "Михаил К.", "Елена П.", "Максим Т.", 
-  "Иван Р.", "Сергей М.", "Андрей Л.", "Алексей Д.", "Роман Н.", 
-  "Виктор С.", "Евгений М.", "Олег П.", "Илья В.", "Денис К."
-];
+        // =========================================
+        // ЛОГИКА АНАЛИЗА И ГОЛЛИВУДСКИЙ ТЕКСТ
+        // =========================================
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const aiProgress = document.getElementById('ai-progress');
+        const resultCard = document.getElementById('analysis-result');
+        const tradeBtn = document.getElementById('trade-btn');
 
-function renderLeaderboard() {
-  const d = new Date();
-  const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-  const rng = function(s) {
-    return function() {
-      s = Math.sin(s) * 10000;
-      return s - Math.floor(s);
-    };
-  }(seed);
+        analyzeBtn.addEventListener('click', () => {
+            // Проверка наличия энергии
+            if (userTier !== 'vip' && energy <= 0) {
+                alert(currentLang === 'ru' ? "Энергия исчерпана. Дождитесь восстановления или повысьте уровень." : "Energy depleted. Wait for recovery or upgrade tier.");
+                return;
+            }
 
-  let shuffled = [...RU_NAMES].sort(() => rng() - 0.5);
-  let top10 = shuffled.slice(0, 10);
-  
-  let html = '';
-  let currentProfit = 9500 + Math.floor(rng() * 3000);
-  
-  top10.forEach((name, i) => {
-    html += `
-      <div class="lb-row">
-        <div class="lb-left">
-          <div class="lb-rank ${i<3 ? 'top-'+(i+1) : ''}">${i+1}</div>
-          <div class="lb-name">${name}</div>
-        </div>
-        <div class="lb-profit">+$${currentProfit.toLocaleString('ru')}</div>
-      </div>
-    `;
-    currentProfit = currentProfit - Math.floor(rng() * 800) - 250;
-  });
-  
-  document.getElementById('leaderboardList').innerHTML = html;
-}
+            if (userTier !== 'vip') {
+                energy--;
+                updateEnergyUI();
+            }
 
-// =========== TABS ===========
-function switchTab(tab,btn){
-  document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('tab-analyzer').style.display = tab==='analyzer'?'block':'none';
-  document.getElementById('tab-stats').style.display = tab==='stats'?'block':'none';
-  document.getElementById('tab-info').style.display = tab==='info'?'block':'none';
-  document.getElementById('tab-calc').style.display = tab==='calc'?'block':'none';
-  document.getElementById('tab-referral').style.display = tab==='referral'?'block':'none';
-  
-  if(tab==='calc') calcUpdate();
-}
+            // Блокируем кнопку на время загрузки
+            analyzeBtn.disabled = true;
+            resultCard.classList.remove('active');
+            tradeBtn.style.display = 'none'; // Скрываем кнопку торговли
+            aiProgress.classList.add('active');
 
-// STARTUP
-renderAssets();
-renderTime();
-calcUpdate();
-renderLeaderboard();
-</script>
+            // Внедрение 4: Голливудская визуализация текста
+            const hwText = document.getElementById('hollywood-text');
+            const steps = [
+                translations[currentLang].h_step1,
+                translations[currentLang].h_step2,
+                translations[currentLang].h_step3,
+                translations[currentLang].h_step4
+            ];
+            let currentStep = 0;
+            hwText.innerText = steps[0];
+
+            // Меняем текст каждые 700мс
+            const stepInterval = setInterval(() => {
+                currentStep++;
+                if(currentStep < steps.length) {
+                    hwText.innerText = steps[currentStep];
+                }
+            }, 700);
+
+            // Итоговая выдача результата (через 3 секунды)
+            setTimeout(() => {
+                clearInterval(stepInterval); // Останавливаем смену текста
+                aiProgress.classList.remove('active');
+                
+                // Рандомный процент и направление
+                const randomPercentage = Math.floor(Math.random() * (98 - 75 + 1)) + 75;
+                const isUp = Math.random() > 0.5;
+                
+                let dirUpText = currentLang === 'ru' ? 'ВВЕРХ ↗' : 'UP ↗';
+                let dirDownText = currentLang === 'ru' ? 'ВНИЗ ↘' : 'DOWN ↘';
+
+                document.getElementById('direction-text').innerText = isUp ? dirUpText : dirDownText;
+                document.getElementById('direction-text').className = isUp ? 'direction-up' : 'direction-down';
+                document.getElementById('confidence-text').innerText = randomPercentage + '%';
+                
+                resultCard.classList.add('active');
+                tradeBtn.style.display = 'block'; // Внедрение 5: Показываем кнопку перехода к брокеру
+                analyzeBtn.disabled = false;
+
+                // =========================================
+                // POSTBACK: ОТПРАВКА СТАТИСТИКИ СДЕЛОК В БОТА
+                // =========================================
+                if(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                    const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+                    fetch(`http://132.243.213.180:8080/postback/deal?user_id=${userId}`)
+                        .then(r => console.log('Deal tracked successfully'))
+                        .catch(e => console.error('Error tracking deal', e));
+                }
+
+            }, 3000);
+        });
+
+        // =========================================
+        // ВНЕДРЕНИЕ 5: ЛОГИКА КНОПКИ "ТОРГОВАТЬ"
+        // =========================================
+        tradeBtn.addEventListener('click', () => {
+            // ВАЖНО: Вставь сюда свою ОБЫЧНУЮ партнерскую ссылку на лендинг/платформу
+            let partnerLink = "https://clck.biz/?partner_id=p45307p146039p3526"; 
+            
+            // Открываем внутри Telegram, если возможно
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.openLink) {
+                window.Telegram.WebApp.openLink(partnerLink);
+            } else {
+                // Если открыто с компьютера браузером
+                window.open(partnerLink, '_blank'); 
+            }
+        });
+
+        // =========================================
+        // КАЛЬКУЛЯТОР ДОХОДНОСТИ С ЗАЩИТОЙ
+        // =========================================
+        window.calculateProfit = function() {
+            const deposit = parseFloat(document.getElementById('calc-deposit').value);
+            const overlay = document.getElementById('calcLockOverlay');
+            
+            if (isNaN(deposit) || deposit < 0) {
+                document.getElementById('calc-result').innerText = "$0";
+                overlay.style.display = 'none';
+                return;
+            }
+
+            // Блокируем калькулятор для Start тарифа, если сумма больше 100
+            if (userTier === 'start' && deposit > 100) {
+                overlay.style.display = 'flex';
+                document.getElementById('calc-result').innerText = "---";
+            } else {
+                overlay.style.display = 'none';
+                // Имитация формулы расчета ИИ (например, 2.5x за сессию)
+                const expected = (deposit * 2.5).toFixed(0);
+                document.getElementById('calc-result').innerText = `+$${expected}`;
+            }
+        }
+
+        // =========================================
+        // ФИНАЛЬНЫЙ ЗАПУСК
+        // =========================================
+        updateLanguage();
+        updateFomoBanner();
+        
+    </script>
 </body>
 </html>
