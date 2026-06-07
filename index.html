@@ -527,13 +527,14 @@ if (config.limit === 'inf') {
 } else if (config.limit === 0) {
   currentEnergy = 'DEMO';
 } else {
-  if (cooldownTime) {
-    const now = new Date().getTime();
-    if (now > parseInt(cooldownTime)) {
-      currentEnergy = config.limit;
-      localStorage.removeItem('ai_cooldown_' + userTier);
-    }
-  }
+if (cooldownTime) {
+              const now = new Date().getTime();
+              if (now > parseInt(cooldownTime)) {
+                currentEnergy = config.limit;
+                localStorage.removeItem('ai_cooldown_' + userTier);
+                localStorage.setItem('ai_energy_' + userTier, currentEnergy); // <-- ВОТ ЭТА СТРОЧКА СОХРАНЯЕТ ЭНЕРГИЮ
+              }
+            }
   if (currentEnergy === null) currentEnergy = config.limit;
   currentEnergy = parseInt(currentEnergy);
 }
